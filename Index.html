@@ -6,369 +6,242 @@
 <title>NO-GEN</title>
 <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  min-height:100vh;
+  background:radial-gradient(circle at top,#1a1a1a,#070707 70%);
+  color:#fff;
+  font-family:system-ui,sans-serif;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.app{
+  width:min(400px,94vw);
+  background:#101010;
+  border:1px solid #2a2a2a;
+  border-radius:22px;
+  padding:22px;
+  box-shadow:0 20px 50px rgba(0,0,0,.45);
+}
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:16px;
+}
+.logo{font-size:20px;font-weight:900;letter-spacing:1px}
+.status{display:flex;align-items:center;gap:6px;font-size:12px;color:#999}
+.dot{width:8px;height:8px;border-radius:50%;background:#555}
+.dot.on{background:#22e080;box-shadow:0 0 10px #22e080}
 
-body {
-    min-height: 100vh;
-    background: radial-gradient(circle at top, #1a1a1a, #050505 70%);
-    color: #fff;
-    font-family: Arial, Helvetica, sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.signal-box{
+  background:#171717;
+  border:1px solid #2c2c2c;
+  border-radius:16px;
+  padding:14px;
+  text-align:center;
+  margin-bottom:14px;
 }
+.signal-label{font-size:11px;letter-spacing:2px;color:#777;margin-bottom:4px}
+.signal-value{font-size:28px;font-weight:900}
 
-.app {
-    width: min(440px, 95vw);
-    background: #0e0e0e;
-    border: 1px solid #2a2a2a;
-    border-radius: 24px;
-    padding: 22px;
-    box-shadow: 0 25px 70px rgba(0,0,0,.55);
+.display{
+  background:linear-gradient(160deg,#171717,#0b0b0b);
+  border:1px solid #2a2a2a;
+  border-radius:18px;
+  min-height:200px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  margin-bottom:16px;
+  padding:16px;
 }
+.phase{font-size:12px;letter-spacing:2px;color:#777;margin-bottom:8px}
+.multiplier{font-size:56px;font-weight:900;line-height:1}
+.multiplier.live{color:#7dffb3}
+.multiplier.crash{color:#ff4d4d}
+.timer{
+  margin-top:10px;
+  font-size:40px;
+  font-weight:800;
+  color:#ffcc66;
+  min-height:48px;
+}
+.guide{margin-top:10px;font-size:13px;color:#888;text-align:center}
 
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
+button{
+  width:100%;
+  border:0;
+  border-radius:14px;
+  padding:15px;
+  background:#fff;
+  color:#000;
+  font-size:15px;
+  font-weight:900;
+  cursor:pointer;
 }
+button:active{transform:scale(.98)}
 
-.logo {
-    font-size: 22px;
-    font-weight: 900;
-    letter-spacing: 2px;
+.message{
+  margin-top:12px;
+  text-align:center;
+  font-size:13px;
+  color:#888;
+  min-height:18px;
 }
-
-.status {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    font-size: 12px;
-    color: #999;
-}
-
-.dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #555;
-}
-.dot.online {
-    background: #22e080;
-    box-shadow: 0 0 12px #22e080;
-}
-
-/* SIGNAL */
-.signal-box {
-    background: #161616;
-    border: 1px solid #2c2c2c;
-    border-radius: 16px;
-    padding: 14px;
-    text-align: center;
-    margin-bottom: 14px;
-}
-.signal-label {
-    font-size: 11px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: #777;
-    margin-bottom: 4px;
-}
-.signal-value {
-    font-size: 28px;
-    font-weight: 900;
-}
-
-/* MAIN AREA */
-.display {
-    min-height: 240px;
-    border-radius: 20px;
-    background: linear-gradient(160deg, #171717, #0a0a0a);
-    border: 1px solid #2a2a2a;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 16px;
-    position: relative;
-}
-
-.phase {
-    font-size: 12px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: #777;
-    margin-bottom: 8px;
-}
-
-.multiplier {
-    font-size: clamp(58px, 16vw, 84px);
-    font-weight: 900;
-    line-height: 1;
-    transition: transform 0.08s ease, color 0.15s ease;
-}
-.multiplier.running {
-    transform: scale(1.05);
-    color: #7dffb3;
-}
-
-/* BIG COUNTDOWN */
-.countdown {
-    margin-top: 12px;
-    font-size: 42px;
-    font-weight: 900;
-    color: #fff;
-    letter-spacing: 2px;
-}
-.countdown.active {
-    color: #ffcc66;
-    animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-    0%   { transform: scale(1); }
-    50%  { transform: scale(1.08); }
-    100% { transform: scale(1); }
-}
-
-.guide {
-    margin-top: 12px;
-    font-size: 13px;
-    color: #888;
-    text-align: center;
-    max-width: 90%;
-}
-
-button {
-    width: 100%;
-    border: 0;
-    border-radius: 15px;
-    padding: 16px;
-    background: #fff;
-    color: #000;
-    font-size: 15px;
-    font-weight: 900;
-    cursor: pointer;
-}
-button:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-}
-
-.message {
-    margin-top: 14px;
-    text-align: center;
-    font-size: 13px;
-    color: #888;
-    min-height: 18px;
-}
-.round-id {
-    margin-top: 8px;
-    text-align: center;
-    font-size: 10px;
-    color: #444;
-    letter-spacing: 1px;
+.round-id{
+  margin-top:8px;
+  text-align:center;
+  font-size:11px;
+  color:#555;
+  letter-spacing:1px;
 }
 </style>
 </head>
 <body>
-
 <div class="app">
-
-    <div class="header">
-        <div class="logo">NO-GEN</div>
-        <div class="status">
-            <span class="dot" id="statusDot"></span>
-            <span id="statusText">Connecting...</span>
-        </div>
+  <div class="header">
+    <div class="logo">NO-GEN</div>
+    <div class="status">
+      <span class="dot" id="dot"></span>
+      <span id="statusText">Connecting...</span>
     </div>
+  </div>
 
-    <!-- SIGNAL (shown before climb) -->
-    <div class="signal-box">
-        <div class="signal-label">Your Signal</div>
-        <div class="signal-value" id="prediction">—</div>
-    </div>
+  <div class="signal-box">
+    <div class="signal-label">YOUR SIGNAL</div>
+    <div class="signal-value" id="signal">—</div>
+  </div>
 
-    <!-- LIVE AREA + COUNTDOWN -->
-    <div class="display">
-        <div class="phase" id="phase">WAITING</div>
-        <div class="multiplier" id="multiplier">1.00x</div>
-        <div class="countdown" id="countdown"></div>
-        <div class="guide" id="guide">Press the button to request a signal</div>
-    </div>
+  <div class="display">
+    <div class="phase" id="phase">WAITING</div>
+    <div class="multiplier" id="multiplier">1.00x</div>
+    <div class="timer" id="timer"></div>
+    <div class="guide" id="guide">Rounds run automatically</div>
+  </div>
 
-    <button id="requestBtn">REQUEST SIGNAL</button>
+  <!-- Button is NEVER disabled -->
+  <button id="btn">REQUEST SIGNAL</button>
 
-    <div class="message" id="message">Waiting for server...</div>
-    <div class="round-id" id="roundId">NO ACTIVE ROUND</div>
-
+  <div class="message" id="msg">Waiting for server...</div>
+  <div class="round-id" id="roundId">NO ACTIVE ROUND</div>
 </div>
 
 <script>
-const BACKEND_URL = "https://no-gen.bonto.run";
-
-const socket = io(BACKEND_URL, {
-    transports: ["websocket", "polling"],
-    reconnection: true,
-    reconnectionAttempts: Infinity,
-    reconnectionDelay: 1000
+const BACKEND = "https://no-gen.bonto.run";
+const socket = io(BACKEND, {
+  transports: ["websocket", "polling"],
+  reconnection: true,
+  reconnectionAttempts: Infinity
 });
 
-const phaseEl      = document.getElementById("phase");
-const multiplierEl = document.getElementById("multiplier");
-const predictionEl = document.getElementById("prediction");
-const countdownEl  = document.getElementById("countdown");
-const guideEl      = document.getElementById("guide");
-const messageEl    = document.getElementById("message");
-const roundIdEl    = document.getElementById("roundId");
-const requestBtn   = document.getElementById("requestBtn");
-const statusDot    = document.getElementById("statusDot");
-const statusText   = document.getElementById("statusText");
-
-function setGuide(text) {
-    guideEl.textContent = text;
-}
+const dot     = document.getElementById("dot");
+const statusText = document.getElementById("statusText");
+const signalEl = document.getElementById("signal");
+const phaseEl  = document.getElementById("phase");
+const multiEl  = document.getElementById("multiplier");
+const timerEl  = document.getElementById("timer");
+const guideEl  = document.getElementById("guide");
+const msgEl    = document.getElementById("msg");
+const roundEl  = document.getElementById("roundId");
+const btn      = document.getElementById("btn");
 
 socket.on("connect", () => {
-    statusDot.classList.add("online");
-    statusText.textContent = "Connected";
-    messageEl.textContent = "Connected to server";
-    setGuide("Press the button to request a signal");
-    socket.emit("get_round_state");
+  dot.classList.add("on");
+  statusText.textContent = "Connected";
+  msgEl.textContent = "Connected";
+  socket.emit("get_round_state");
 });
 
 socket.on("disconnect", () => {
-    statusDot.classList.remove("online");
-    statusText.textContent = "Disconnected";
-    messageEl.textContent = "Connection lost. Reconnecting...";
+  dot.classList.remove("on");
+  statusText.textContent = "Disconnected";
+  msgEl.textContent = "Reconnecting...";
 });
 
 socket.on("connect_error", () => {
-    statusDot.classList.remove("online");
-    statusText.textContent = "Connection error";
-    messageEl.textContent = "Cannot reach backend";
+  dot.classList.remove("on");
+  statusText.textContent = "Connection error";
+  msgEl.textContent = "Cannot reach backend";
 });
 
-/* Request signal */
-requestBtn.addEventListener("click", () => {
-    requestBtn.disabled = true;
-    predictionEl.textContent = "...";
-    messageEl.textContent = "Requesting signal...";
-    setGuide("Waiting for server to lock your signal");
+/* Button always works – never disabled */
+btn.onclick = () => {
+  msgEl.textContent = "Requesting signal...";
+  socket.emit("request_prediction");
+};
 
-    socket.emit("request_prediction", {
-        min: 1.01,
-        max: 100
-    });
-});
-
-/* Signal locked BEFORE climb */
+/* Server gives signal (only if round not crashed yet) */
 socket.on("prediction_ready", (data) => {
-    predictionEl.textContent = data.prediction + "x";
-    roundIdEl.textContent = "ROUND " + data.roundId;
-    phaseEl.textContent = "SIGNAL LOCKED";
-    messageEl.textContent = "Signal locked";
-    setGuide("Your signal is ready. Round will start soon");
-});
-
-/* Visible countdown */
-socket.on("round_countdown", (data) => {
-    phaseEl.textContent = "STARTING";
-    countdownEl.textContent = data.seconds;
-    countdownEl.classList.add("active");
-    multiplierEl.textContent = "1.00x";
-    multiplierEl.classList.remove("running");
-    roundIdEl.textContent = "ROUND " + data.roundId;
-    messageEl.textContent = "Round is about to begin";
-    setGuide("Round starts in " + data.seconds + " seconds");
-    requestBtn.disabled = true;
-});
-
-/* Live climb */
-socket.on("round_started", (data) => {
-    phaseEl.textContent = "LIVE";
-    countdownEl.textContent = "";
-    countdownEl.classList.remove("active");
-    multiplierEl.textContent = "1.00x";
-    multiplierEl.classList.add("running");
-    roundIdEl.textContent = "ROUND " + data.roundId;
-    messageEl.textContent = "Round is live";
-    setGuide("Multiplier is climbing...");
-});
-
-socket.on("round_update", (data) => {
-    multiplierEl.textContent = Number(data.multiplier).toFixed(2) + "x";
-    phaseEl.textContent = "LIVE";
-    setGuide("Multiplier is climbing...");
-});
-
-socket.on("round_ended", (data) => {
-    multiplierEl.classList.remove("running");
-    multiplierEl.textContent = Number(data.multiplier).toFixed(2) + "x";
-    phaseEl.textContent = "CRASHED";
-    predictionEl.textContent = Number(data.prediction).toFixed(2) + "x";
-    messageEl.textContent = "Round finished";
-    setGuide("Crashed at " + Number(data.prediction).toFixed(2) + "x");
-    roundIdEl.textContent = "ROUND " + data.roundId;
-});
-
-socket.on("round_state", (data) => {
-    if (!data || !data.phase) return;
-    roundIdEl.textContent = data.roundId ? "ROUND " + data.roundId : "NO ACTIVE ROUND";
-
-    if (data.phase === "idle") {
-        phaseEl.textContent = "WAITING";
-        multiplierEl.textContent = "1.00x";
-        countdownEl.textContent = "";
-        countdownEl.classList.remove("active");
-        requestBtn.disabled = false;
-        setGuide("Press the button to request a signal");
-    } else if (data.phase === "countdown") {
-        phaseEl.textContent = "STARTING";
-        multiplierEl.textContent = "1.00x";
-        if (data.countdown !== undefined) {
-            countdownEl.textContent = data.countdown;
-            countdownEl.classList.add("active");
-            setGuide("Round starts in " + data.countdown + " seconds");
-        }
-        requestBtn.disabled = true;
-    } else if (data.phase === "running") {
-        phaseEl.textContent = "LIVE";
-        multiplierEl.textContent = Number(data.multiplier).toFixed(2) + "x";
-        multiplierEl.classList.add("running");
-        countdownEl.textContent = "";
-        setGuide("Multiplier is climbing...");
-        requestBtn.disabled = true;
-    } else if (data.phase === "ended") {
-        phaseEl.textContent = "CRASHED";
-        multiplierEl.textContent = Number(data.multiplier).toFixed(2) + "x";
-        multiplierEl.classList.remove("running");
-        requestBtn.disabled = true;
-        if (data.prediction !== undefined) {
-            predictionEl.textContent = Number(data.prediction).toFixed(2) + "x";
-            setGuide("Crashed at " + Number(data.prediction).toFixed(2) + "x");
-        }
-    }
-});
-
-socket.on("round_reset", () => {
-    phaseEl.textContent = "WAITING";
-    multiplierEl.textContent = "1.00x";
-    multiplierEl.classList.remove("running");
-    predictionEl.textContent = "—";
-    countdownEl.textContent = "";
-    countdownEl.classList.remove("active");
-    messageEl.textContent = "Ready for next round";
-    roundIdEl.textContent = "NO ACTIVE ROUND";
-    requestBtn.disabled = false;
-    setGuide("Press the button to request a signal");
+  signalEl.textContent = data.prediction + "x";
+  roundEl.textContent = "ROUND " + data.roundId;
+  msgEl.textContent = "Signal received";
+  guideEl.textContent = "Prediction locked for this round";
 });
 
 socket.on("prediction_error", (data) => {
-    requestBtn.disabled = false;
-    messageEl.textContent = data?.message || "Could not get signal";
-    setGuide("Try again when the round is free");
+  msgEl.textContent = data?.message || "No signal right now";
+  guideEl.textContent = "Wait for the next countdown";
+});
+
+/* Timer during countdown */
+socket.on("round_countdown", (data) => {
+  phaseEl.textContent = "COUNTDOWN";
+  multiEl.textContent = "1.00x";
+  multiEl.className = "multiplier";
+  timerEl.textContent = data.seconds;          // show timer
+  guideEl.textContent = "Round starts in " + data.seconds + "s";
+  roundEl.textContent = "ROUND " + data.roundId;
+  msgEl.textContent = "Get ready";
+});
+
+/* Live */
+socket.on("round_started", () => {
+  phaseEl.textContent = "LIVE";
+  timerEl.textContent = "";
+  multiEl.textContent = "1.00x";
+  multiEl.className = "multiplier live";
+  guideEl.textContent = "Multiplier climbing...";
+  msgEl.textContent = "Round is live – you can still request signal";
+});
+
+socket.on("round_update", (data) => {
+  multiEl.textContent = Number(data.multiplier).toFixed(2) + "x";
+  multiEl.className = "multiplier live";
+});
+
+/* Crashed */
+socket.on("round_ended", (data) => {
+  phaseEl.textContent = "CRASHED";
+  multiEl.textContent = Number(data.multiplier).toFixed(2) + "x";
+  multiEl.className = "multiplier crash";
+  signalEl.textContent = Number(data.prediction).toFixed(2) + "x";
+  timerEl.textContent = "";
+  guideEl.textContent = "Crashed at " + Number(data.prediction).toFixed(2) + "x";
+  msgEl.textContent = "Round finished – next round coming";
+  roundEl.textContent = "ROUND " + data.roundId;
+});
+
+/* Next round about to start */
+socket.on("round_reset", () => {
+  phaseEl.textContent = "WAITING";
+  multiEl.textContent = "1.00x";
+  multiEl.className = "multiplier";
+  signalEl.textContent = "—";
+  timerEl.textContent = "";
+  guideEl.textContent = "Next round starting soon";
+  msgEl.textContent = "Ready";
+  roundEl.textContent = "NO ACTIVE ROUND";
+});
+
+socket.on("round_state", (data) => {
+  if (!data) return;
+  if (data.roundId) roundEl.textContent = "ROUND " + data.roundId;
+  if (data.phase === "countdown" && data.countdown != null) {
+    timerEl.textContent = data.countdown;
+  }
 });
 </script>
 </body>
