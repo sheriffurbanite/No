@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#080b12">
-  <title>Random Number Generator</title>
+  <title>No-Gen | Random Number Generator</title>
+
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
 
   <style>
     * {
@@ -31,7 +33,7 @@
     }
 
     .card {
-      background: rgba(16, 21, 32, 0.92);
+      background: rgba(16, 21, 32, 0.94);
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 24px;
       padding: 25px;
@@ -53,7 +55,7 @@
       align-items: center;
       justify-content: center;
       background: linear-gradient(135deg, #377dff, #7c3aed);
-      font-size: 28px;
+      font-size: 25px;
       font-weight: 900;
       box-shadow: 0 10px 35px rgba(55,125,255,0.3);
     }
@@ -85,6 +87,12 @@
       background: #f59e0b;
       border-radius: 50%;
       box-shadow: 0 0 10px rgba(245,158,11,0.7);
+      transition: 0.3s;
+    }
+
+    .connected .dot {
+      background: #22c55e;
+      box-shadow: 0 0 10px rgba(34,197,94,0.8);
     }
 
     .number-box {
@@ -170,6 +178,12 @@
       transform: scale(0.98);
     }
 
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
     .secondary {
       margin-top: 10px;
       background: #111722;
@@ -215,6 +229,7 @@
       color: #596477;
       font-size: 10px;
       margin-top: 20px;
+      line-height: 1.5;
     }
 
     .animate {
@@ -222,9 +237,23 @@
     }
 
     @keyframes pop {
-      0% { transform: scale(0.7); opacity: 0; }
-      70% { transform: scale(1.08); }
-      100% { transform: scale(1); opacity: 1; }
+      0% {
+        transform: scale(0.7);
+        opacity: 0;
+      }
+
+      70% {
+        transform: scale(1.08);
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .error {
+      color: #f87171;
     }
   </style>
 </head>
@@ -235,14 +264,18 @@
     <section class="card">
 
       <header class="header">
-        <div class="logo">RNG</div>
-        <h1>Random Number Generator</h1>
-        <p class="subtitle">Generate numbers instantly</p>
+        <div class="logo">NG</div>
+
+        <h1>No-Gen</h1>
+
+        <p class="subtitle">
+          Real-time random number generator
+        </p>
       </header>
 
-      <div class="status">
+      <div class="status" id="status">
         <span class="dot" id="statusDot"></span>
-        <span id="statusText">Frontend ready</span>
+        <span id="statusText">Connecting...</span>
       </div>
 
       <div class="number-box">
@@ -250,73 +283,175 @@
       </div>
 
       <div class="controls">
+
         <div class="field">
           <label>MINIMUM</label>
-          <input id="min" type="number" value="1">
+          <input
+            id="min"
+            type="number"
+            value="1"
+          >
         </div>
 
         <div class="field">
           <label>MAXIMUM</label>
-          <input id="max" type="number" value="100">
+          <input
+            id="max"
+            type="number"
+            value="100"
+          >
         </div>
+
       </div>
 
-      <button id="generateBtn">GENERATE NUMBER</button>
-      <button class="secondary" id="clearBtn">CLEAR HISTORY</button>
+      <button id="generateBtn" disabled>
+        CONNECTING...
+      </button>
+
+      <button class="secondary" id="clearBtn">
+        CLEAR HISTORY
+      </button>
 
       <div class="history">
+
         <div class="history-title">
           <span>Recent Results</span>
           <span id="count">0</span>
         </div>
 
         <div id="historyList"></div>
+
       </div>
 
       <div class="footer">
-        Socket.IO connection will be added when the backend is deployed.
+        Connected to the No-Gen real-time server.
       </div>
 
     </section>
   </main>
 
   <script>
-    const numberElement = document.getElementById("number");
-    const minInput = document.getElementById("min");
-    const maxInput = document.getElementById("max");
-    const generateBtn = document.getElementById("generateBtn");
-    const clearBtn = document.getElementById("clearBtn");
-    const historyList = document.getElementById("historyList");
-    const countElement = document.getElementById("count");
+
+    /*
+      IMPORTANT:
+      Replace this URL after deploying your backend.
+
+      Example:
+      const BACKEND_URL = "https://your-backend.onrender.com";
+    */
+
+    const BACKEND_URL = "https://YOUR-BACKEND-URL";
+
+    const socket = io(BACKEND_URL, {
+      transports: ["websocket", "polling"]
+    });
+
+    const numberElement =
+      document.getElementById("number");
+
+    const minInput =
+      document.getElementById("min");
+
+    const maxInput =
+      document.getElementById("max");
+
+    const generateBtn =
+      document.getElementById("generateBtn");
+
+    const clearBtn =
+      document.getElementById("clearBtn");
+
+    const historyList =
+      document.getElementById("historyList");
+
+    const countElement =
+      document.getElementById("count");
+
+    const status =
+      document.getElementById("status");
+
+    const statusText =
+      document.getElementById("statusText");
 
     let history = [];
 
-    function generateNumber() {
-      const min = Number(minInput.value);
-      const max = Number(maxInput.value);
+    /*
+      SOCKET CONNECTED
+    */
 
-      if (!Number.isFinite(min) || !Number.isFinite(max)) {
-        alert("Please enter valid numbers.");
-        return;
+    socket.on("connect", () => {
+
+      status.classList.add("connected");
+
+      statusText.textContent =
+        "Server connected";
+
+      generateBtn.disabled = false;
+
+      generateBtn.textContent =
+        "GENERATE NUMBER";
+
+    });
+
+
+    /*
+      SOCKET DISCONNECTED
+    */
+
+    socket.on("disconnect", () => {
+
+      status.classList.remove("connected");
+
+      statusText.textContent =
+        "Server disconnected";
+
+      generateBtn.disabled = true;
+
+      generateBtn.textContent =
+        "SERVER OFFLINE";
+
+    });
+
+
+    /*
+      SERVER STATUS
+    */
+
+    socket.on("server_status", (data) => {
+
+      if (data.connected) {
+
+        statusText.textContent =
+          "Server connected";
+
       }
 
-      if (min > max) {
-        alert("Minimum cannot be greater than maximum.");
-        return;
-      }
+    });
 
-      const result =
-        Math.floor(Math.random() * (max - min + 1)) + min;
+
+    /*
+      NUMBER RECEIVED FROM BACKEND
+    */
+
+    socket.on("number_generated", (data) => {
 
       numberElement.classList.remove("animate");
+
       void numberElement.offsetWidth;
+
       numberElement.classList.add("animate");
 
-      numberElement.textContent = result;
+      numberElement.textContent =
+        data.number;
 
       history.unshift({
-        value: result,
-        time: new Date().toLocaleTimeString()
+
+        value: data.number,
+
+        time: new Date(
+          data.timestamp
+        ).toLocaleTimeString()
+
       });
 
       if (history.length > 10) {
@@ -324,14 +459,78 @@
       }
 
       renderHistory();
+
+    });
+
+
+    /*
+      SERVER ERROR
+    */
+
+    socket.on("generation_error", (data) => {
+
+      alert(data.message);
+
+    });
+
+
+    /*
+      REQUEST NUMBER FROM SERVER
+    */
+
+    function generateNumber() {
+
+      const min =
+        Number(minInput.value);
+
+      const max =
+        Number(maxInput.value);
+
+      if (!Number.isFinite(min) ||
+          !Number.isFinite(max)) {
+
+        alert(
+          "Please enter valid numbers."
+        );
+
+        return;
+      }
+
+      if (min > max) {
+
+        alert(
+          "Minimum cannot be greater than maximum."
+        );
+
+        return;
+      }
+
+      socket.emit(
+        "generate_number",
+        {
+          min: min,
+          max: max
+        }
+      );
+
     }
 
+
+    /*
+      HISTORY
+    */
+
     function renderHistory() {
+
       historyList.innerHTML = "";
 
       history.forEach(item => {
-        const row = document.createElement("div");
-        row.className = "history-item";
+
+        const row =
+          document.createElement("div");
+
+        row.className =
+          "history-item";
 
         row.innerHTML = `
           <span>${item.time}</span>
@@ -339,28 +538,71 @@
         `;
 
         historyList.appendChild(row);
+
       });
 
-      countElement.textContent = history.length;
+      countElement.textContent =
+        history.length;
+
     }
 
-    function clearHistory() {
-      history = [];
-      numberElement.textContent = "---";
-      renderHistory();
-    }
 
-    generateBtn.addEventListener("click", generateNumber);
-    clearBtn.addEventListener("click", clearHistory);
+    /*
+      CLEAR HISTORY
+    */
 
-    [minInput, maxInput].forEach(input => {
-      input.addEventListener("keydown", event => {
-        if (event.key === "Enter") {
-          generateNumber();
-        }
-      });
-    });
+    clearBtn.addEventListener(
+      "click",
+      () => {
+
+        history = [];
+
+        numberElement.textContent =
+          "---";
+
+        renderHistory();
+
+      }
+    );
+
+
+    /*
+      GENERATE BUTTON
+    */
+
+    generateBtn.addEventListener(
+      "click",
+      generateNumber
+    );
+
+
+    /*
+      ENTER KEY
+    */
+
+    [minInput, maxInput].forEach(
+      input => {
+
+        input.addEventListener(
+          "keydown",
+          event => {
+
+            if (
+              event.key === "Enter" &&
+              !generateBtn.disabled
+            ) {
+
+              generateNumber();
+
+            }
+
+          }
+        );
+
+      }
+    );
+
   </script>
 
 </body>
-</html>
+            </html>
