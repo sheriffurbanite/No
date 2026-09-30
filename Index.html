@@ -10,7 +10,7 @@
 
 body {
     min-height: 100vh;
-    background: radial-gradient(circle at top, #1c1c1c, #070707 70%);
+    background: radial-gradient(circle at top, #1a1a1a, #050505 70%);
     color: #fff;
     font-family: Arial, Helvetica, sans-serif;
     display: flex;
@@ -19,19 +19,19 @@ body {
 }
 
 .app {
-    width: min(430px, 94vw);
-    background: #0f0f0f;
+    width: min(440px, 95vw);
+    background: #0e0e0e;
     border: 1px solid #2a2a2a;
     border-radius: 24px;
     padding: 22px;
-    box-shadow: 0 25px 70px rgba(0,0,0,.5);
+    box-shadow: 0 25px 70px rgba(0,0,0,.55);
 }
 
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 18px;
+    margin-bottom: 16px;
 }
 
 .logo {
@@ -54,41 +54,37 @@ body {
     border-radius: 50%;
     background: #555;
 }
-
 .dot.online {
     background: #22e080;
     box-shadow: 0 0 12px #22e080;
 }
 
-/* SIGNAL BOX */
+/* SIGNAL */
 .signal-box {
     background: #161616;
     border: 1px solid #2c2c2c;
-    border-radius: 18px;
-    padding: 16px;
+    border-radius: 16px;
+    padding: 14px;
     text-align: center;
     margin-bottom: 14px;
 }
-
 .signal-label {
     font-size: 11px;
     letter-spacing: 2px;
     text-transform: uppercase;
     color: #777;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
-
 .signal-value {
-    font-size: 30px;
+    font-size: 28px;
     font-weight: 900;
-    color: #fff;
 }
 
-/* MAIN DISPLAY */
+/* MAIN AREA */
 .display {
-    min-height: 220px;
+    min-height: 240px;
     border-radius: 20px;
-    background: linear-gradient(160deg, #171717, #0b0b0b);
+    background: linear-gradient(160deg, #171717, #0a0a0a);
     border: 1px solid #2a2a2a;
     display: flex;
     flex-direction: column;
@@ -96,7 +92,6 @@ body {
     align-items: center;
     margin-bottom: 16px;
     position: relative;
-    overflow: hidden;
 }
 
 .phase {
@@ -104,30 +99,41 @@ body {
     letter-spacing: 3px;
     text-transform: uppercase;
     color: #777;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .multiplier {
-    font-size: clamp(56px, 16vw, 82px);
+    font-size: clamp(58px, 16vw, 84px);
     font-weight: 900;
     line-height: 1;
-    transition: transform 0.1s ease;
+    transition: transform 0.08s ease, color 0.15s ease;
 }
-
 .multiplier.running {
-    transform: scale(1.04);
+    transform: scale(1.05);
     color: #7dffb3;
 }
 
+/* BIG COUNTDOWN */
 .countdown {
-    margin-top: 14px;
-    font-size: 36px;
-    font-weight: 800;
+    margin-top: 12px;
+    font-size: 42px;
+    font-weight: 900;
     color: #fff;
+    letter-spacing: 2px;
+}
+.countdown.active {
+    color: #ffcc66;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.08); }
+    100% { transform: scale(1); }
 }
 
 .guide {
-    margin-top: 10px;
+    margin-top: 12px;
     font-size: 13px;
     color: #888;
     text-align: center;
@@ -144,14 +150,10 @@ button {
     font-size: 15px;
     font-weight: 900;
     cursor: pointer;
-    transition: 0.2s;
 }
-
-button:hover { transform: translateY(-1px); }
 button:disabled {
     opacity: 0.35;
     cursor: not-allowed;
-    transform: none;
 }
 
 .message {
@@ -159,15 +161,14 @@ button:disabled {
     text-align: center;
     font-size: 13px;
     color: #888;
-    min-height: 20px;
+    min-height: 18px;
 }
-
 .round-id {
-    margin-top: 10px;
+    margin-top: 8px;
     text-align: center;
     font-size: 10px;
-    letter-spacing: 1px;
     color: #444;
+    letter-spacing: 1px;
 }
 </style>
 </head>
@@ -183,20 +184,18 @@ button:disabled {
         </div>
     </div>
 
-    <!-- SIGNAL (shown before the climb) -->
+    <!-- SIGNAL (shown before climb) -->
     <div class="signal-box">
         <div class="signal-label">Your Signal</div>
         <div class="signal-value" id="prediction">—</div>
     </div>
 
-    <!-- RUNNING AREA -->
+    <!-- LIVE AREA + COUNTDOWN -->
     <div class="display">
         <div class="phase" id="phase">WAITING</div>
         <div class="multiplier" id="multiplier">1.00x</div>
         <div class="countdown" id="countdown"></div>
-        <div class="guide" id="guide">
-            Press the button to request a signal
-        </div>
+        <div class="guide" id="guide">Press the button to request a signal</div>
     </div>
 
     <button id="requestBtn">REQUEST SIGNAL</button>
@@ -248,9 +247,10 @@ socket.on("disconnect", () => {
 socket.on("connect_error", () => {
     statusDot.classList.remove("online");
     statusText.textContent = "Connection error";
+    messageEl.textContent = "Cannot reach backend";
 });
 
-/* Request signal (fixed range, no min/max UI) */
+/* Request signal */
 requestBtn.addEventListener("click", () => {
     requestBtn.disabled = true;
     predictionEl.textContent = "...";
@@ -263,19 +263,20 @@ requestBtn.addEventListener("click", () => {
     });
 });
 
-/* Signal locked BEFORE the round starts climbing */
+/* Signal locked BEFORE climb */
 socket.on("prediction_ready", (data) => {
     predictionEl.textContent = data.prediction + "x";
     roundIdEl.textContent = "ROUND " + data.roundId;
     phaseEl.textContent = "SIGNAL LOCKED";
-    messageEl.textContent = "Signal locked by server";
-    setGuide("Your signal is ready. Round will start soon...");
+    messageEl.textContent = "Signal locked";
+    setGuide("Your signal is ready. Round will start soon");
 });
 
-/* Countdown – guide the player that the round is about to begin */
+/* Visible countdown */
 socket.on("round_countdown", (data) => {
     phaseEl.textContent = "STARTING";
     countdownEl.textContent = data.seconds;
+    countdownEl.classList.add("active");
     multiplierEl.textContent = "1.00x";
     multiplierEl.classList.remove("running");
     roundIdEl.textContent = "ROUND " + data.roundId;
@@ -284,10 +285,11 @@ socket.on("round_countdown", (data) => {
     requestBtn.disabled = true;
 });
 
-/* Live climb begins */
+/* Live climb */
 socket.on("round_started", (data) => {
     phaseEl.textContent = "LIVE";
     countdownEl.textContent = "";
+    countdownEl.classList.remove("active");
     multiplierEl.textContent = "1.00x";
     multiplierEl.classList.add("running");
     roundIdEl.textContent = "ROUND " + data.roundId;
@@ -295,14 +297,12 @@ socket.on("round_started", (data) => {
     setGuide("Multiplier is climbing...");
 });
 
-/* Live updates from server only */
 socket.on("round_update", (data) => {
     multiplierEl.textContent = Number(data.multiplier).toFixed(2) + "x";
     phaseEl.textContent = "LIVE";
     setGuide("Multiplier is climbing...");
 });
 
-/* Round ends at the locked prediction */
 socket.on("round_ended", (data) => {
     multiplierEl.classList.remove("running");
     multiplierEl.textContent = Number(data.multiplier).toFixed(2) + "x";
@@ -313,42 +313,34 @@ socket.on("round_ended", (data) => {
     roundIdEl.textContent = "ROUND " + data.roundId;
 });
 
-/* Sync when joining mid-round */
 socket.on("round_state", (data) => {
     if (!data || !data.phase) return;
-
     roundIdEl.textContent = data.roundId ? "ROUND " + data.roundId : "NO ACTIVE ROUND";
 
     if (data.phase === "idle") {
         phaseEl.textContent = "WAITING";
         multiplierEl.textContent = "1.00x";
         countdownEl.textContent = "";
+        countdownEl.classList.remove("active");
         requestBtn.disabled = false;
         setGuide("Press the button to request a signal");
-        return;
-    }
-
-    if (data.phase === "countdown") {
+    } else if (data.phase === "countdown") {
         phaseEl.textContent = "STARTING";
         multiplierEl.textContent = "1.00x";
         if (data.countdown !== undefined) {
             countdownEl.textContent = data.countdown;
+            countdownEl.classList.add("active");
             setGuide("Round starts in " + data.countdown + " seconds");
         }
         requestBtn.disabled = true;
-        return;
-    }
-
-    if (data.phase === "running") {
+    } else if (data.phase === "running") {
         phaseEl.textContent = "LIVE";
         multiplierEl.textContent = Number(data.multiplier).toFixed(2) + "x";
         multiplierEl.classList.add("running");
+        countdownEl.textContent = "";
         setGuide("Multiplier is climbing...");
         requestBtn.disabled = true;
-        return;
-    }
-
-    if (data.phase === "ended") {
+    } else if (data.phase === "ended") {
         phaseEl.textContent = "CRASHED";
         multiplierEl.textContent = Number(data.multiplier).toFixed(2) + "x";
         multiplierEl.classList.remove("running");
@@ -360,13 +352,13 @@ socket.on("round_state", (data) => {
     }
 });
 
-/* Reset for next round */
 socket.on("round_reset", () => {
     phaseEl.textContent = "WAITING";
     multiplierEl.textContent = "1.00x";
     multiplierEl.classList.remove("running");
     predictionEl.textContent = "—";
     countdownEl.textContent = "";
+    countdownEl.classList.remove("active");
     messageEl.textContent = "Ready for next round";
     roundIdEl.textContent = "NO ACTIVE ROUND";
     requestBtn.disabled = false;
