@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080b12">
+  <title>Random Number Generator</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at top, #172033 0%, #080b12 45%, #05070b 100%);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 430px;
+    }
+
+    .card {
+      background: rgba(16, 21, 32, 0.92);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 25px;
+      box-shadow: 0 25px 70px rgba(0,0,0,0.45);
+      backdrop-filter: blur(15px);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .logo {
+      width: 62px;
+      height: 62px;
+      margin: auto;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #377dff, #7c3aed);
+      font-size: 28px;
+      font-weight: 900;
+      box-shadow: 0 10px 35px rgba(55,125,255,0.3);
+    }
+
+    h1 {
+      margin-top: 15px;
+      font-size: 24px;
+    }
+
+    .subtitle {
+      color: #8e98aa;
+      font-size: 13px;
+      margin-top: 7px;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      margin: 20px 0;
+      color: #9ca6b8;
+      font-size: 12px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      background: #f59e0b;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(245,158,11,0.7);
+    }
+
+    .number-box {
+      min-height: 170px;
+      border-radius: 20px;
+      background: #090d15;
+      border: 1px solid rgba(255,255,255,0.07);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 22px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .number-box::before {
+      content: "";
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      background: rgba(55,125,255,0.12);
+      filter: blur(55px);
+      border-radius: 50%;
+    }
+
+    #number {
+      position: relative;
+      font-size: 58px;
+      font-weight: 900;
+      letter-spacing: 2px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+
+    .field {
+      background: #0c111b;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      color: #8791a3;
+      margin-bottom: 7px;
+    }
+
+    input {
+      width: 100%;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    button {
+      width: 100%;
+      border: none;
+      cursor: pointer;
+      border-radius: 15px;
+      padding: 15px;
+      color: white;
+      font-size: 15px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #377dff, #6d4aff);
+      box-shadow: 0 12px 25px rgba(55,125,255,0.22);
+      transition: 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .secondary {
+      margin-top: 10px;
+      background: #111722;
+      box-shadow: none;
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #cbd3df;
+    }
+
+    .history {
+      margin-top: 24px;
+    }
+
+    .history-title {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 13px;
+      color: #9da7b8;
+    }
+
+    #historyList {
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 12px;
+      margin-bottom: 7px;
+      background: #0c1119;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    .history-item span:last-child {
+      color: #5f91ff;
+      font-weight: bold;
+    }
+
+    .footer {
+      text-align: center;
+      color: #596477;
+      font-size: 10px;
+      margin-top: 20px;
+    }
+
+    .animate {
+      animation: pop 0.35s ease;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0.7); opacity: 0; }
+      70% { transform: scale(1.08); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="app">
+    <section class="card">
+
+      <header class="header">
+        <div class="logo">RNG</div>
+        <h1>Random Number Generator</h1>
+        <p class="subtitle">Generate numbers instantly</p>
+      </header>
+
+      <div class="status">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">Frontend ready</span>
+      </div>
+
+      <div class="number-box">
+        <div id="number">---</div>
+      </div>
+
+      <div class="controls">
+        <div class="field">
+          <label>MINIMUM</label>
+          <input id="min" type="number" value="1">
+        </div>
+
+        <div class="field">
+          <label>MAXIMUM</label>
+          <input id="max" type="number" value="100">
+        </div>
+      </div>
+
+      <button id="generateBtn">GENERATE NUMBER</button>
+      <button class="secondary" id="clearBtn">CLEAR HISTORY</button>
+
+      <div class="history">
+        <div class="history-title">
+          <span>Recent Results</span>
+          <span id="count">0</span>
+        </div>
+
+        <div id="historyList"></div>
+      </div>
+
+      <div class="footer">
+        Socket.IO connection will be added when the backend is deployed.
+      </div>
+
+    </section>
+  </main>
+
+  <script>
+    const numberElement = document.getElementById("number");
+    const minInput = document.getElementById("min");
+    const maxInput = document.getElementById("max");
+    const generateBtn = document.getElementById("generateBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const historyList = document.getElementById("historyList");
+    const countElement = document.getElementById("count");
+
+    let history = [];
+
+    function generateNumber() {
+      const min = Number(minInput.value);
+      const max = Number(maxInput.value);
+
+      if (!Number.isFinite(min) || !Number.isFinite(max)) {
+        alert("Please enter valid numbers.");
+        return;
+      }
+
+      if (min > max) {
+        alert("Minimum cannot be greater than maximum.");
+        return;
+      }
+
+      const result =
+        Math.floor(Math.random() * (max - min + 1)) + min;
+
+      numberElement.classList.remove("animate");
+      void numberElement.offsetWidth;
+      numberElement.classList.add("animate");
+
+      numberElement.textContent = result;
+
+      history.unshift({
+        value: result,
+        time: new Date().toLocaleTimeString()
+      });
+
+      if (history.length > 10) {
+        history.pop();
+      }
+
+      renderHistory();
+    }
+
+    function renderHistory() {
+      historyList.innerHTML = "";
+
+      history.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "history-item";
+
+        row.innerHTML = `
+          <span>${item.time}</span>
+          <span>${item.value}</span>
+        `;
+
+        historyList.appendChild(row);
+      });
+
+      countElement.textContent = history.length;
+    }
+
+    function clearHistory() {
+      history = [];
+      numberElement.textContent = "---";
+      renderHistory();
+    }
+
+    generateBtn.addEventListener("click", generateNumber);
+    clearBtn.addEventListener("click", clearHistory);
+
+    [minInput, maxInput].forEach(input => {
+      input.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+          generateNumber();
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
