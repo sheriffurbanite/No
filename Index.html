@@ -1,21 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <title>No-Gen | Real-Time Engine</title>
+  <title>No-Gen | Live Engine</title>
 
   <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
 
   <style>
-
     * {
       box-sizing: border-box;
       margin: 0;
@@ -24,645 +17,405 @@
 
     body {
       min-height: 100vh;
-      font-family:
-        Inter,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
-
       background:
-        radial-gradient(
-          circle at top,
-          #172554 0,
-          #080b14 45%,
-          #03040a 100%
-        );
-
+        radial-gradient(circle at top, #172554, #070b14 45%, #020308);
       color: #fff;
-      display: flex;
-      justify-content: center;
-      padding: 20px;
+      font-family: Arial, sans-serif;
+      padding: 18px;
     }
-
 
     .app {
       width: 100%;
       max-width: 480px;
+      margin: auto;
     }
 
+    /* HEADER */
 
-    /* =========================
-       HEADER
-    ========================= */
-
-    .header {
+    header {
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
       margin-bottom: 18px;
     }
-
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 11px;
+      gap: 10px;
     }
-
 
     .logo {
       width: 44px;
       height: 44px;
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      border-radius: 14px;
-
-      background:
-        linear-gradient(
-          135deg,
-          #2563eb,
-          #7c3aed
-        );
-
-      font-size: 20px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
       font-weight: 900;
-
-      box-shadow:
-        0 8px 30px
-        rgba(37, 99, 235, .3);
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
     }
-
 
     .brand h1 {
       font-size: 20px;
-      letter-spacing: -.5px;
     }
-
 
     .brand p {
-      color: #8f9bb5;
-      font-size: 11px;
-      margin-top: 2px;
+      font-size: 10px;
+      color: #8490a8;
+      margin-top: 3px;
     }
 
-
-    /* =========================
-       CONNECTION
-    ========================= */
-
-    .connection {
+    .status {
       display: flex;
       align-items: center;
-      gap: 7px;
-
-      padding: 7px 10px;
-
-      border: 1px solid
-        rgba(255,255,255,.08);
-
-      border-radius: 20px;
-
-      background:
-        rgba(255,255,255,.04);
-
-      font-size: 11px;
-      color: #9ca3af;
+      gap: 6px;
+      font-size: 10px;
+      color: #94a3b8;
     }
 
-
-    .status-dot {
+    .dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
       background: #f59e0b;
     }
 
-
-    .connection.online .status-dot {
+    .status.online .dot {
       background: #22c55e;
-      box-shadow:
-        0 0 10px
-        rgba(34,197,94,.7);
+      box-shadow: 0 0 10px #22c55e;
     }
 
-
-    .connection.offline .status-dot {
+    .status.offline .dot {
       background: #ef4444;
     }
 
+    /* MAIN CARD */
 
-    /* =========================
-       MAIN GAME CARD
-    ========================= */
-
-    .game-card {
-      position: relative;
-
-      overflow: hidden;
-
-      border-radius: 25px;
-
-      padding: 25px 18px 20px;
-
-      background:
-        linear-gradient(
-          145deg,
-          rgba(18,25,45,.96),
-          rgba(7,10,20,.98)
-        );
-
-      border:
-        1px solid
-        rgba(255,255,255,.08);
-
-      box-shadow:
-        0 25px 70px
-        rgba(0,0,0,.45);
+    .card {
+      background: rgba(12, 18, 32, .96);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0 25px 60px rgba(0,0,0,.45);
     }
 
+    /* NUMBER REQUEST */
 
-    .game-card::before {
-      content: "";
-
-      position: absolute;
-
-      width: 250px;
-      height: 250px;
-
-      top: -150px;
-      left: 50%;
-
-      transform: translateX(-50%);
-
-      background:
-        rgba(59,130,246,.18);
-
-      filter: blur(60px);
-
-      pointer-events: none;
-    }
-
-
-    .phase {
-      position: relative;
-
+    .request-section {
       text-align: center;
+    }
 
+    .section-label {
       color: #94a3b8;
-
-      font-size: 12px;
-
+      font-size: 11px;
       text-transform: uppercase;
-
-      letter-spacing: 2px;
-
-      margin-bottom: 12px;
-    }
-
-
-    .multiplier {
-      position: relative;
-
-      text-align: center;
-
-      font-size: clamp(58px, 18vw, 90px);
-
-      font-weight: 900;
-
-      letter-spacing: -5px;
-
-      line-height: 1;
-
-      margin: 10px 0 18px;
-
-      background:
-        linear-gradient(
-          135deg,
-          #ffffff,
-          #93c5fd
-        );
-
-      -webkit-background-clip: text;
-      background-clip: text;
-
-      color: transparent;
-
-      transition:
-        transform .15s ease;
-    }
-
-
-    .multiplier.running {
-      transform: scale(1.02);
-    }
-
-
-    /* =========================
-       TIMER
-    ========================= */
-
-    .timer-box {
-      position: relative;
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      min-height: 55px;
-
-      border-radius: 16px;
-
-      background:
-        rgba(255,255,255,.035);
-
-      border:
-        1px solid
-        rgba(255,255,255,.07);
-
-      margin-bottom: 18px;
-    }
-
-
-    .timer {
-      font-size: 24px;
-      font-weight: 800;
-    }
-
-
-    /* =========================
-       ROUND ID
-    ========================= */
-
-    .round-info {
-      display: flex;
-      justify-content: space-between;
-
-      gap: 10px;
-
-      font-size: 10px;
-
-      color: #64748b;
-
-      margin-bottom: 18px;
-    }
-
-
-    .round-id {
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-
-
-    /* =========================
-       NUMBER GENERATOR
-    ========================= */
-
-    .generator {
-      margin-top: 10px;
-
-      padding-top: 18px;
-
-      border-top:
-        1px solid
-        rgba(255,255,255,.07);
-    }
-
-
-    .generator-title {
-      font-size: 13px;
-      font-weight: 700;
-
-      margin-bottom: 12px;
-
-      color: #dbeafe;
-    }
-
-
-    .inputs {
-      display: grid;
-
-      grid-template-columns:
-        1fr 1fr;
-
-      gap: 10px;
-
+      letter-spacing: 1.5px;
       margin-bottom: 10px;
     }
 
+    .number-display {
+      min-height: 95px;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      background: rgba(255,255,255,.035);
+      border: 1px solid rgba(255,255,255,.07);
+      margin-bottom: 14px;
+    }
 
-    .input-group label {
+    .number-display span {
+      font-size: 52px;
+      font-weight: 900;
+    }
+
+    .number-display.waiting span {
+      color: #475569;
+      font-size: 34px;
+    }
+
+    .number-display.generated {
+      animation: numberPop .3s ease;
+    }
+
+    @keyframes numberPop {
+      0% {
+        transform: scale(.8);
+        opacity: .3;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* INPUTS */
+
+    .inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    label {
       display: block;
-
-      font-size: 10px;
-
+      text-align: left;
       color: #64748b;
-
+      font-size: 10px;
       margin-bottom: 5px;
     }
 
-
     input {
       width: 100%;
-
       padding: 13px;
-
-      border-radius: 12px;
-
-      border:
-        1px solid
-        rgba(255,255,255,.08);
-
+      border-radius: 11px;
+      border: 1px solid rgba(255,255,255,.08);
       outline: none;
-
-      background:
-        rgba(0,0,0,.25);
-
+      background: #080d17;
       color: white;
-
       font-size: 14px;
     }
-
 
     input:focus {
       border-color: #3b82f6;
     }
 
-
-    .generate-btn {
+    button {
       width: 100%;
-
       border: none;
-
-      border-radius: 13px;
-
+      border-radius: 12px;
       padding: 14px;
-
-      background:
-        linear-gradient(
-          135deg,
-          #2563eb,
-          #7c3aed
-        );
-
       color: white;
-
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
       font-size: 14px;
-
       font-weight: 800;
-
       cursor: pointer;
-
-      transition:
-        transform .15s ease,
-        opacity .15s ease;
     }
 
-
-    .generate-btn:hover {
-      transform: translateY(-1px);
-    }
-
-
-    .generate-btn:active {
-      transform: scale(.98);
-    }
-
-
-    .generate-btn:disabled {
+    button:disabled {
       opacity: .45;
       cursor: not-allowed;
-      transform: none;
     }
 
+    /* DIVIDER */
 
-    /* =========================
-       RESULT
-    ========================= */
+    .divider {
+      height: 1px;
+      background: rgba(255,255,255,.07);
+      margin: 22px 0;
+    }
 
-    .result-box {
-      margin-top: 12px;
+    /* LIVE ENGINE */
 
-      padding: 17px;
-
-      border-radius: 15px;
-
-      background:
-        rgba(37,99,235,.08);
-
-      border:
-        1px solid
-        rgba(59,130,246,.15);
-
+    .live-section {
       text-align: center;
     }
 
-
-    .result-label {
-      color: #64748b;
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-
-    .result {
-      font-size: 32px;
-
-      font-weight: 900;
-
-      margin-top: 5px;
-    }
-
-
-    /* =========================
-       HISTORY
-    ========================= */
-
-    .history-section {
-      margin-top: 18px;
-    }
-
-
-    .section-title {
-      display: flex;
-      justify-content: space-between;
-
-      margin-bottom: 9px;
-
-      font-size: 12px;
-
+    .phase {
       color: #94a3b8;
+      font-size: 11px;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
     }
 
+    .multiplier {
+      font-size: 64px;
+      font-weight: 900;
+      letter-spacing: -4px;
+      margin-bottom: 15px;
+      background: linear-gradient(135deg, #fff, #93c5fd);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .timer {
+      min-height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      background: rgba(255,255,255,.035);
+      border: 1px solid rgba(255,255,255,.06);
+      color: #cbd5e1;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .round-id {
+      margin-top: 10px;
+      color: #475569;
+      font-size: 9px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* HISTORY */
+
+    .history-title {
+      margin: 18px 0 9px;
+      color: #94a3b8;
+      font-size: 11px;
+    }
 
     .history {
       display: flex;
-
       gap: 7px;
-
       overflow-x: auto;
-
-      padding-bottom: 3px;
-
       scrollbar-width: none;
     }
-
 
     .history::-webkit-scrollbar {
       display: none;
     }
 
-
     .history-item {
-      flex: 0 0 auto;
-
       min-width: 70px;
-
       padding: 10px;
-
       text-align: center;
-
-      border-radius: 11px;
-
-      background:
-        rgba(255,255,255,.04);
-
-      border:
-        1px solid
-        rgba(255,255,255,.06);
+      border-radius: 10px;
+      background: rgba(255,255,255,.035);
+      border: 1px solid rgba(255,255,255,.06);
     }
-
 
     .history-item strong {
-      display: block;
-
-      font-size: 13px;
+      font-size: 12px;
     }
-
 
     .history-item small {
       display: block;
-
       margin-top: 3px;
-
+      color: #475569;
       font-size: 8px;
-
-      color: #64748b;
     }
-
-
-    /* =========================
-       FOOTER
-    ========================= */
 
     .footer {
       text-align: center;
-
       color: #475569;
-
       font-size: 9px;
-
-      margin-top: 16px;
+      margin-top: 15px;
     }
-
-
-    /* =========================
-       ANIMATION
-    ========================= */
-
-    @keyframes pulse {
-      0%, 100% {
-        opacity: 1;
-      }
-
-      50% {
-        opacity: .55;
-      }
-    }
-
-
-    .pulse {
-      animation:
-        pulse 1s infinite;
-    }
-
 
     @media (max-width: 380px) {
-
-      body {
-        padding: 12px;
-      }
-
-      .game-card {
-        padding: 20px 14px;
+      .card {
+        padding: 15px;
       }
 
       .multiplier {
-        font-size: 58px;
+        font-size: 55px;
       }
-
     }
-
   </style>
-
 </head>
-
 
 <body>
 
-  <main class="app">
+<div class="app">
 
+  <!-- HEADER -->
 
-    <!-- HEADER -->
+  <header>
 
-    <header class="header">
+    <div class="brand">
 
-      <div class="brand">
-
-        <div class="logo">
-          NG
-        </div>
-
-        <div>
-          <h1>No-Gen</h1>
-          <p>Real-Time Number Engine</p>
-        </div>
-
+      <div class="logo">
+        NG
       </div>
 
+      <div>
+        <h1>No-Gen</h1>
+        <p>Real-Time Number Engine</p>
+      </div>
+
+    </div>
+
+    <div id="status" class="status">
+
+      <span class="dot"></span>
+
+      <span id="statusText">
+        Connecting
+      </span>
+
+    </div>
+
+  </header>
+
+
+  <div class="card">
+
+    <!-- ==========================================
+         NUMBER REQUEST
+    =========================================== -->
+
+    <section class="request-section">
+
+      <div class="section-label">
+        Requested Number
+      </div>
 
       <div
-        id="connection"
-        class="connection"
+        id="numberDisplay"
+        class="number-display waiting"
       >
 
-        <span class="status-dot"></span>
-
-        <span id="connectionText">
-          Connecting...
+        <span id="generatedNumber">
+          —
         </span>
 
       </div>
 
-    </header>
+
+      <div class="inputs">
+
+        <div>
+          <label for="min">
+            MINIMUM
+          </label>
+
+          <input
+            id="min"
+            type="number"
+            value="1"
+          >
+        </div>
+
+        <div>
+          <label for="max">
+            MAXIMUM
+          </label>
+
+          <input
+            id="max"
+            type="number"
+            value="100"
+          >
+        </div>
+
+      </div>
 
 
-    <!-- GAME -->
+      <button id="generateBtn">
+        REQUEST NUMBER
+      </button>
 
-    <section class="game-card">
+    </section>
 
+
+    <div class="divider"></div>
+
+
+    <!-- ==========================================
+         LIVE ENGINE
+    =========================================== -->
+
+    <section class="live-section">
 
       <div
-        id="roundPhase"
+        id="phase"
         class="phase"
       >
-        CONNECTING
+        WAITING
       </div>
 
 
@@ -674,483 +427,191 @@
       </div>
 
 
-      <div class="timer-box">
-
-        <div
-          id="timer"
-          class="timer"
-        >
-          --
-        </div>
-
-      </div>
-
-
-      <div class="round-info">
-
-        <span>
-          ROUND
-        </span>
-
-        <span
-          id="roundId"
-          class="round-id"
-        >
-          Waiting...
-        </span>
-
-      </div>
-
-
-      <!-- NUMBER GENERATOR -->
-
-      <div class="generator">
-
-        <div class="generator-title">
-          Random Number Generator
-        </div>
-
-
-        <div class="inputs">
-
-          <div class="input-group">
-
-            <label for="min">
-              MINIMUM
-            </label>
-
-            <input
-              id="min"
-              type="number"
-              value="1"
-            >
-
-          </div>
-
-
-          <div class="input-group">
-
-            <label for="max">
-              MAXIMUM
-            </label>
-
-            <input
-              id="max"
-              type="number"
-              value="100"
-            >
-
-          </div>
-
-        </div>
-
-
-        <button
-          id="generateBtn"
-          class="generate-btn"
-          type="button"
-        >
-          GENERATE NUMBER
-        </button>
-
-
-        <div class="result-box">
-
-          <div class="result-label">
-            Latest Result
-          </div>
-
-          <div
-            id="result"
-            class="result"
-          >
-            —
-          </div>
-
-        </div>
-
-      </div>
-
-
-    </section>
-
-
-    <!-- ROUND HISTORY -->
-
-    <section class="history-section">
-
-      <div class="section-title">
-
-        <span>
-          Recent Rounds
-        </span>
-
-        <span>
-          LIVE
-        </span>
-
+      <div
+        id="timer"
+        class="timer"
+      >
+        —
       </div>
 
 
       <div
-        id="history"
-        class="history"
+        id="roundId"
+        class="round-id"
       >
+        No active round
       </div>
 
     </section>
 
 
-    <div class="footer">
-      No-Gen • Socket.IO Real-Time Engine
+    <!-- HISTORY -->
+
+    <div class="history-title">
+      RECENT ROUNDS
     </div>
 
+    <div
+      id="history"
+      class="history"
+    ></div>
 
-  </main>
-
-
-  <script>
-
-    /* =====================================================
-       CONFIGURATION
-    ===================================================== */
-
-    const BACKEND_URL =
-      "https://no-gen.bonto.run";
+  </div>
 
 
-    /* =====================================================
-       SOCKET CONNECTION
-    ===================================================== */
+  <div class="footer">
+    No-Gen • Socket.IO Real-Time Engine
+  </div>
 
-    const socket = io(
-      BACKEND_URL,
-      {
-        transports: [
-          "websocket",
-          "polling"
-        ],
-
-        reconnection: true,
-
-        reconnectionAttempts: Infinity,
-
-        reconnectionDelay: 1000,
-
-        reconnectionDelayMax: 5000
-      }
-    );
+</div>
 
 
-    /* =====================================================
-       STATE
-    ===================================================== */
+<script>
 
-    let connected = false;
+  /* =====================================================
+     CONFIG
+  ===================================================== */
 
-    let phase = "connecting";
-
-    let roundId = null;
-
-    let multiplier = 1.00;
-
-    let countdown = 5;
-
-    let roundHistory = [];
+  const BACKEND_URL =
+    "https://no-gen.bonto.run";
 
 
-    /* =====================================================
-       DOM
-    ===================================================== */
+  /* =====================================================
+     SOCKET
+  ===================================================== */
 
-    const connection =
-      document.getElementById(
-        "connection"
-      );
+  const socket = io(
+    BACKEND_URL,
+    {
+      transports: [
+        "websocket",
+        "polling"
+      ],
 
-    const connectionText =
-      document.getElementById(
-        "connectionText"
-      );
-
-    const phaseElement =
-      document.getElementById(
-        "roundPhase"
-      );
-
-    const multiplierElement =
-      document.getElementById(
-        "multiplier"
-      );
-
-    const timerElement =
-      document.getElementById(
-        "timer"
-      );
-
-    const roundIdElement =
-      document.getElementById(
-        "roundId"
-      );
-
-    const generateButton =
-      document.getElementById(
-        "generateBtn"
-      );
-
-    const minInput =
-      document.getElementById(
-        "min"
-      );
-
-    const maxInput =
-      document.getElementById(
-        "max"
-      );
-
-    const resultElement =
-      document.getElementById(
-        "result"
-      );
-
-    const historyElement =
-      document.getElementById(
-        "history"
-      );
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000
+    }
+  );
 
 
-    /* =====================================================
-       CONNECTION
-    ===================================================== */
+  /* =====================================================
+     STATE
+  ===================================================== */
 
-    socket.on("connect", () => {
+  let connected = false;
 
-      connected = true;
+  let phase = "waiting";
 
-      connection.classList.add(
-        "online"
-      );
+  let currentRoundId = null;
 
-      connection.classList.remove(
-        "offline"
-      );
+  let currentMultiplier = 1;
 
-      connectionText.textContent =
-        "Connected";
-
-      console.log(
-        "Connected:",
-        socket.id
-      );
-
-    });
+  let history = [];
 
 
-    socket.on("disconnect", () => {
+  /* =====================================================
+     ELEMENTS
+  ===================================================== */
+
+  const status =
+    document.getElementById("status");
+
+  const statusText =
+    document.getElementById("statusText");
+
+  const numberDisplay =
+    document.getElementById("numberDisplay");
+
+  const generatedNumber =
+    document.getElementById("generatedNumber");
+
+  const generateBtn =
+    document.getElementById("generateBtn");
+
+  const minInput =
+    document.getElementById("min");
+
+  const maxInput =
+    document.getElementById("max");
+
+  const phaseElement =
+    document.getElementById("phase");
+
+  const multiplierElement =
+    document.getElementById("multiplier");
+
+  const timerElement =
+    document.getElementById("timer");
+
+  const roundIdElement =
+    document.getElementById("roundId");
+
+  const historyElement =
+    document.getElementById("history");
+
+
+  /* =====================================================
+     CONNECTION
+  ===================================================== */
+
+  socket.on("connect", () => {
+
+    connected = true;
+
+    status.classList.add("online");
+    status.classList.remove("offline");
+
+    statusText.textContent =
+      "Connected";
+
+  });
+
+
+  socket.on("disconnect", () => {
+
+    connected = false;
+
+    status.classList.remove("online");
+    status.classList.add("offline");
+
+    statusText.textContent =
+      "Disconnected";
+
+  });
+
+
+  socket.on(
+    "connect_error",
+    () => {
 
       connected = false;
 
-      connection.classList.remove(
-        "online"
-      );
+      status.classList.remove("online");
+      status.classList.add("offline");
 
-      connection.classList.add(
-        "offline"
-      );
+      statusText.textContent =
+        "Connection error";
 
-      connectionText.textContent =
-        "Disconnected";
+    }
+  );
 
-      console.log(
-        "Socket disconnected"
-      );
 
-    });
+  /* =====================================================
+     NUMBER REQUEST
+     
+     IMPORTANT:
+     This operates independently from the live engine.
+  ===================================================== */
 
-
-    socket.on(
-      "connect_error",
-      (error) => {
-
-        connected = false;
-
-        connection.classList.remove(
-          "online"
-        );
-
-        connection.classList.add(
-          "offline"
-        );
-
-        connectionText.textContent =
-          "Connection error";
-
-        console.error(
-          error
-        );
-
-      }
-    );
-
-
-    /* =====================================================
-       SERVER STATUS
-    ===================================================== */
-
-    socket.on(
-      "server_status",
-      (data) => {
-
-        console.log(
-          "Server:",
-          data
-        );
-
-      }
-    );
-
-
-    /* =====================================================
-       CURRENT STATE
-    ===================================================== */
-
-    socket.on(
-      "round_state",
-      (data) => {
-
-        if (!data) return;
-
-        phase =
-          data.phase || "waiting";
-
-        roundId =
-          data.roundId || null;
-
-        countdown =
-          Number(data.seconds) || 0;
-
-        multiplier =
-          Number(data.multiplier) || 1;
-
-        updateUI();
-
-      }
-    );
-
-
-    /* =====================================================
-       COUNTDOWN
-    ===================================================== */
-
-    socket.on(
-      "round_countdown",
-      (data) => {
-
-        phase = "countdown";
-
-        roundId =
-          data.roundId;
-
-        countdown =
-          Number(data.seconds);
-
-        multiplier = 1.00;
-
-        updateUI();
-
-      }
-    );
-
-
-    /* =====================================================
-       ROUND STARTED
-    ===================================================== */
-
-    socket.on(
-      "round_started",
-      (data) => {
-
-        phase = "running";
-
-        roundId =
-          data.roundId;
-
-        multiplier =
-          Number(data.multiplier) || 1;
-
-        updateUI();
-
-      }
-    );
-
-
-    /* =====================================================
-       LIVE MULTIPLIER
-    ===================================================== */
-
-    socket.on(
-      "round_update",
-      (data) => {
-
-        if (!data) return;
-
-        phase = "running";
-
-        roundId =
-          data.roundId;
-
-        multiplier =
-          Number(data.multiplier) || 1;
-
-        updateUI();
-
-      }
-    );
-
-
-    /* =====================================================
-       ROUND ENDED
-    ===================================================== */
-
-    socket.on(
-      "round_ended",
-      (data) => {
-
-        phase = "ended";
-
-        roundId =
-          data.roundId;
-
-        multiplier =
-          Number(data.multiplier) || 1;
-
-        addRoundHistory(
-          roundId,
-          multiplier
-        );
-
-        updateUI();
-
-      }
-    );
-
-
-    /* =====================================================
-       NUMBER GENERATION
-    ===================================================== */
-
-    generateButton.addEventListener(
-      "click",
-      generateNumber
-    );
-
-
-    function generateNumber() {
+  generateBtn.addEventListener(
+    "click",
+    () => {
 
       if (!connected) {
 
-        resultElement.textContent =
-          "OFFLINE";
+        generatedNumber.textContent =
+          "OFF";
 
         return;
       }
@@ -1165,36 +626,29 @@
 
       if (
         !Number.isInteger(min) ||
-        !Number.isInteger(max)
+        !Number.isInteger(max) ||
+        min > max
       ) {
 
-        resultElement.textContent =
-          "INVALID";
+        generatedNumber.textContent =
+          "ERR";
 
         return;
       }
 
 
-      if (min > max) {
+      generateBtn.disabled = true;
 
-        resultElement.textContent =
-          "ERROR";
-
-        return;
-      }
+      generateBtn.textContent =
+        "REQUESTING...";
 
 
       /*
-        Generation remains available independently
-        from the simulated round engine.
+        The request is sent immediately.
+
+        It does NOT wait for the countdown.
+        It does NOT depend on the multiplier.
       */
-
-      generateButton.disabled =
-        true;
-
-      generateButton.textContent =
-        "GENERATING...";
-
 
       socket.emit(
         "generate_number",
@@ -1205,276 +659,363 @@
       );
 
     }
+  );
 
 
-    /* =====================================================
-       NUMBER GENERATED
-    ===================================================== */
+  /* =====================================================
+     NUMBER RECEIVED
+     
+     NUMBER IS DISPLAYED FIRST.
+  ===================================================== */
 
-    socket.on(
-      "number_generated",
-      (data) => {
+  socket.on(
+    "number_generated",
+    (data) => {
 
-        resultElement.textContent =
-          data.number;
-
-        generateButton.disabled =
-          false;
-
-        generateButton.textContent =
-          "GENERATE NUMBER";
-
-      }
-    );
+      generatedNumber.textContent =
+        data.number;
 
 
-    /* =====================================================
-       GENERATION ERROR
-    ===================================================== */
-
-    socket.on(
-      "generation_error",
-      (data) => {
-
-        resultElement.textContent =
-          "ERROR";
-
-        generateButton.disabled =
-          false;
-
-        generateButton.textContent =
-          "GENERATE NUMBER";
-
-        console.error(
-          data?.message
-        );
-
-      }
-    );
-
-
-    /* =====================================================
-       UI UPDATE
-    ===================================================== */
-
-    function updateUI() {
+      numberDisplay.classList.remove(
+        "generated"
+      );
 
       /*
-        Phase
+        Force animation restart.
       */
 
-      if (phase === "countdown") {
-
-        phaseElement.textContent =
-          "NEXT ROUND";
-
-        phaseElement.classList.add(
-          "pulse"
-        );
-
-        timerElement.textContent =
-          `${countdown}s`;
-
-        multiplierElement.textContent =
-          "1.00x";
-
-      }
+      void numberDisplay.offsetWidth;
 
 
-      else if (phase === "running") {
+      numberDisplay.classList.remove(
+        "waiting"
+      );
 
-        phaseElement.textContent =
-          "RUNNING";
-
-        phaseElement.classList.remove(
-          "pulse"
-        );
-
-        timerElement.textContent =
-          "LIVE";
-
-        multiplierElement.textContent =
-          `${multiplier.toFixed(2)}x`;
-
-        multiplierElement.classList.add(
-          "running"
-        );
-
-      }
+      numberDisplay.classList.add(
+        "generated"
+      );
 
 
-      else if (phase === "ended") {
+      generateBtn.disabled = false;
 
-        phaseElement.textContent =
-          "ROUND ENDED";
-
-        phaseElement.classList.remove(
-          "pulse"
-        );
-
-        timerElement.textContent =
-          "WAITING";
-
-        multiplierElement.textContent =
-          `${multiplier.toFixed(2)}x`;
-
-        multiplierElement.classList.remove(
-          "running"
-        );
-
-      }
-
-
-      else {
-
-        phaseElement.textContent =
-          "CONNECTING";
-
-        timerElement.textContent =
-          "--";
-
-      }
+      generateBtn.textContent =
+        "REQUEST NUMBER";
 
 
       /*
-        Round ID
+        The live round is NOT started
+        by this event.
+
+        The server controls the live
+        round independently.
       */
 
-      if (roundId) {
-
-        roundIdElement.textContent =
-          roundId.substring(0, 12);
-
-      } else {
-
-        roundIdElement.textContent =
-          "Waiting...";
-
-      }
-
     }
+  );
 
 
-    /* =====================================================
-       HISTORY
-    ===================================================== */
+  /* =====================================================
+     NUMBER ERROR
+  ===================================================== */
 
-    function addRoundHistory(
-      id,
-      value
-    ) {
+  socket.on(
+    "generation_error",
+    (data) => {
 
-      roundHistory.unshift({
-        id,
-        value
-      });
+      generatedNumber.textContent =
+        "ERR";
 
+      generateBtn.disabled = false;
 
-      if (
-        roundHistory.length > 12
-      ) {
+      generateBtn.textContent =
+        "REQUEST NUMBER";
 
-        roundHistory.pop();
-
-      }
-
-
-      renderHistory();
-
-    }
-
-
-    function renderHistory() {
-
-      historyElement.innerHTML = "";
-
-
-      roundHistory.forEach(
-        (item) => {
-
-          const element =
-            document.createElement(
-              "div"
-            );
-
-          element.className =
-            "history-item";
-
-
-          element.innerHTML = `
-            <strong>
-              ${Number(item.value).toFixed(2)}x
-            </strong>
-
-            <small>
-              ${item.id.substring(0, 6)}
-            </small>
-          `;
-
-
-          historyElement.appendChild(
-            element
-          );
-
-        }
+      console.error(
+        data?.message
       );
 
     }
+  );
 
 
-    /* =====================================================
-       ENTER KEY
-    ===================================================== */
+  /* =====================================================
+     SERVER ROUND STATE
+  ===================================================== */
 
-    minInput.addEventListener(
-      "keydown",
-      (event) => {
+  socket.on(
+    "round_state",
+    (data) => {
 
-        if (
-          event.key === "Enter"
-        ) {
+      if (!data) return;
 
-          generateNumber();
+      phase =
+        data.phase || "waiting";
 
-        }
+      currentRoundId =
+        data.roundId || null;
+
+      currentMultiplier =
+        Number(data.multiplier) || 1;
+
+      updateLiveUI();
+
+    }
+  );
+
+
+  /* =====================================================
+     COUNTDOWN
+  ===================================================== */
+
+  socket.on(
+    "round_countdown",
+    (data) => {
+
+      phase = "countdown";
+
+      currentRoundId =
+        data.roundId;
+
+      currentMultiplier = 1;
+
+      phaseElement.textContent =
+        "NEXT ROUND";
+
+      multiplierElement.textContent =
+        "1.00x";
+
+      timerElement.textContent =
+        `${data.seconds}s`;
+
+      updateRoundId();
+
+    }
+  );
+
+
+  /* =====================================================
+     ROUND START
+  ===================================================== */
+
+  socket.on(
+    "round_started",
+    (data) => {
+
+      phase = "running";
+
+      currentRoundId =
+        data.roundId;
+
+      currentMultiplier =
+        Number(data.multiplier) || 1;
+
+      updateLiveUI();
+
+    }
+  );
+
+
+  /* =====================================================
+     LIVE MULTIPLIER
+  ===================================================== */
+
+  socket.on(
+    "round_update",
+    (data) => {
+
+      phase = "running";
+
+      currentRoundId =
+        data.roundId;
+
+      currentMultiplier =
+        Number(data.multiplier) || 1;
+
+      updateLiveUI();
+
+    }
+  );
+
+
+  /* =====================================================
+     ROUND ENDED
+  ===================================================== */
+
+  socket.on(
+    "round_ended",
+    (data) => {
+
+      phase = "ended";
+
+      currentRoundId =
+        data.roundId;
+
+      currentMultiplier =
+        Number(data.multiplier) || 1;
+
+      updateLiveUI();
+
+      addHistory(
+        currentRoundId,
+        currentMultiplier
+      );
+
+    }
+  );
+
+
+  /* =====================================================
+     LIVE UI
+  ===================================================== */
+
+  function updateLiveUI() {
+
+    if (phase === "countdown") {
+
+      phaseElement.textContent =
+        "NEXT ROUND";
+
+      timerElement.textContent =
+        "WAITING";
+
+    }
+
+    else if (phase === "running") {
+
+      phaseElement.textContent =
+        "LIVE";
+
+      timerElement.textContent =
+        "RUNNING";
+
+    }
+
+    else if (phase === "ended") {
+
+      phaseElement.textContent =
+        "ROUND ENDED";
+
+      timerElement.textContent =
+        "WAITING";
+
+    }
+
+    else {
+
+      phaseElement.textContent =
+        "WAITING";
+
+      timerElement.textContent =
+        "—";
+
+    }
+
+
+    multiplierElement.textContent =
+      `${currentMultiplier.toFixed(2)}x`;
+
+
+    updateRoundId();
+
+  }
+
+
+  /* =====================================================
+     ROUND ID
+  ===================================================== */
+
+  function updateRoundId() {
+
+    if (!currentRoundId) {
+
+      roundIdElement.textContent =
+        "No active round";
+
+      return;
+    }
+
+
+    roundIdElement.textContent =
+      `Round ${currentRoundId.substring(0, 12)}`;
+
+  }
+
+
+  /* =====================================================
+     HISTORY
+  ===================================================== */
+
+  function addHistory(
+    id,
+    multiplier
+  ) {
+
+    history.unshift({
+      id,
+      multiplier
+    });
+
+
+    if (history.length > 12) {
+      history.pop();
+    }
+
+
+    renderHistory();
+
+  }
+
+
+  function renderHistory() {
+
+    historyElement.innerHTML = "";
+
+
+    history.forEach(
+      (item) => {
+
+        const element =
+          document.createElement("div");
+
+        element.className =
+          "history-item";
+
+
+        element.innerHTML = `
+          <strong>
+            ${item.multiplier.toFixed(2)}x
+          </strong>
+
+          <small>
+            ${item.id.substring(0, 6)}
+          </small>
+        `;
+
+
+        historyElement.appendChild(
+          element
+        );
 
       }
     );
 
-
-    maxInput.addEventListener(
-      "keydown",
-      (event) => {
-
-        if (
-          event.key === "Enter"
-        ) {
-
-          generateNumber();
-
-        }
-
-      }
-    );
+  }
 
 
-    /* =====================================================
-       INITIAL UI
-    ===================================================== */
+  /* =====================================================
+     INITIAL
+  ===================================================== */
 
-    updateUI();
+  console.log(
+    "No-Gen initialized"
+  );
 
-    console.log(
-      "No-Gen frontend initialized."
-    );
+  console.log(
+    "Backend:",
+    BACKEND_URL
+  );
 
-    console.log(
-      "Backend:",
-      BACKEND_URL
-    );
-
-  </script>
+</script>
 
 </body>
-
-</html>
+    </html>
