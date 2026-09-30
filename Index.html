@@ -8,21 +8,14 @@
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-    --bg: #070b12;
-    --border: rgba(255,255,255,.08);
-    --text: #f4f7fb;
-    --muted: #8290a3;
-    --accent: #ffb000;
-    --green: #35e58b;
-    --red: #ff4d67;
-    --blue: #4da3ff;
-    --purple: #b57bff;
+    --bg: #070b12; --border: rgba(255,255,255,.08); --text: #f4f7fb;
+    --muted: #8290a3; --accent: #ffb000; --green: #35e58b;
+    --red: #ff4d67; --blue: #4da3ff; --purple: #b57bff;
 }
 body {
     min-height: 100vh;
     background: radial-gradient(circle at top, #172333 0%, #070b12 45%, #04060a 100%);
-    color: var(--text);
-    font-family: Inter, Arial, sans-serif;
+    color: var(--text); font-family: Inter, Arial, sans-serif;
 }
 .app { width: min(1100px, 94%); margin: auto; padding: 25px 0 50px; }
 .header { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 22px; }
@@ -137,8 +130,6 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 </header>
 
 <main class="grid">
-
-    <!-- LIVE ROUND -->
     <section class="card round-card">
         <div class="round-top">
             <div>
@@ -149,9 +140,7 @@ button:disabled { cursor: not-allowed; opacity: .45; }
         </div>
 
         <div class="phase" id="phaseText">Waiting for the next round</div>
-
         <div class="multiplier waiting" id="multiplier">—</div>
-
         <div class="timer" id="timer">Waiting for signal</div>
 
         <div class="status-bar">
@@ -160,12 +149,10 @@ button:disabled { cursor: not-allowed; opacity: .45; }
         </div>
     </section>
 
-    <!-- RIGHT COLUMN -->
     <div>
-        <!-- REQUEST -->
         <section class="card request-card">
             <h2>Request Number</h2>
-            <p>Request starts the server round. The real crash point is locked on the server before countdown.</p>
+            <p>Request starts the server round. Real crash point is locked on the server before countdown.</p>
 
             <div class="number-box">
                 <div class="number empty" id="generatedNumber">No number yet</div>
@@ -186,21 +173,15 @@ button:disabled { cursor: not-allowed; opacity: .45; }
             <div class="message" id="message">Connecting to server...</div>
         </section>
 
-        <!-- PREDICTOR BOT AI -->
         <section class="card predictor-card">
             <h2>Predictor Bot AI</h2>
-            <p>
-                Tight Aviator-style signals with low probability of high multipliers.<br>
-                Uses cyclic local-time continuity for smooth prediction during countdown.
-            </p>
-
+            <p>Tight Aviator-style signals. Prediction appears before and during countdown.</p>
             <div class="pred-value" id="predValue">—</div>
             <div class="pred-meta" id="predMeta">Waiting for countdown...</div>
         </section>
     </div>
 </main>
 
-<!-- HISTORY -->
 <section class="card history-card">
     <div class="history-title">
         <h2>Completed Rounds</h2>
@@ -214,13 +195,12 @@ button:disabled { cursor: not-allowed; opacity: .45; }
     </div>
 </section>
 
-<!-- RULES -->
 <section class="card rules">
     <h2>How it works</h2>
     <div class="rule"><span>01</span><div><b>Server locks the real result</b> before countdown starts.</div></div>
-    <div class="rule"><span>02</span><div><b>Predictor Bot AI</b> shows tight Aviator-style signals during countdown (high multipliers are rare).</div></div>
-    <div class="rule"><span>03</span><div>The live multiplier is driven only by the server and ends exactly at the locked crash point.</div></div>
-    <div class="rule"><span>04</span><div>Prediction is visual only — it never overrides the server result.</div></div>
+    <div class="rule"><span>02</span><div><b>Predictor Bot AI</b> shows tight signals before and during countdown.</div></div>
+    <div class="rule"><span>03</span><div>Live multiplier is driven only by the server.</div></div>
+    <div class="rule"><span>04</span><div>Prediction is visual only — never overrides the server result.</div></div>
 </section>
 
 </div>
@@ -235,7 +215,6 @@ const socket = io(BACKEND_URL, {
     reconnectionDelay: 1000
 });
 
-/* DOM */
 const connectionDot   = document.getElementById("connectionDot");
 const connectionText  = document.getElementById("connectionText");
 const requestBtn      = document.getElementById("requestBtn");
@@ -254,22 +233,14 @@ const historyEl       = document.getElementById("history");
 const predValue       = document.getElementById("predValue");
 const predMeta        = document.getElementById("predMeta");
 
-/* STATE */
-let connected         = false;
-let currentPhase      = "idle";
+let connected = false;
+let currentPhase = "idle";
 let predictorInterval = null;
-let lastPrediction    = null;
+let lastPrediction = null;
 
-/* ====================== PREDICTOR BOT AI (Tight Aviator-style) ====================== */
-/*
- * Heavy bias toward low multipliers.
- * Probability of high signals is very low.
- * Cyclic local time is used only for smooth visual continuity.
- */
-function cyclicPredict(min = 1.00, max = 100) {
+/* ===== Official Signal Algorithm (same for all tools) ===== */
+function generateSignal(min = 1.00, max = 100) {
     const now = Date.now();
-
-    // Smooth continuous seeds
     const t1 = (now / 1000) % 61;
     const t2 = (now / 2347) % 29;
     const t3 = (now / 9173) % 13;
@@ -279,31 +250,25 @@ function cyclicPredict(min = 1.00, max = 100) {
         Math.sin(t2 * 1.13) * 0.33 +
         Math.cos(t3 * 2.19) * 0.25
     );
-
     r = (r + 1) / 2;
     r = Math.max(0.0001, Math.min(0.9999, r));
 
-    // Classic crash inverse distribution
-    let crash = 0.99 / (1 - r);
+    let signal = 0.99 / (1 - r);
 
-    // Extra tightening – make high multipliers rare
-    if (crash > 10)  crash = 10 + (crash - 10) * 0.35;
-    if (crash > 30)  crash = 30 + (crash - 30) * 0.25;
-    if (crash > 100) crash = 100;
+    if (signal > 10)  signal = 10 + (signal - 10) * 0.35;
+    if (signal > 30)  signal = 30 + (signal - 30) * 0.25;
+    if (signal > 100) signal = 100;
 
-    // Tiny continuity noise
-    crash += Math.sin(now / 410) * 0.04;
-
-    crash = Math.max(min, Math.min(max, crash));
-    return Math.round(crash * 100) / 100;
+    signal += Math.sin(now / 410) * 0.04;
+    signal = Math.max(min, Math.min(max, signal));
+    return Math.round(signal * 100) / 100;
 }
 
 function startPredictor(min, max) {
     stopPredictor();
-    predMeta.textContent = "Predictor Bot AI • Tight Aviator-style signals";
-
+    predMeta.textContent = "Predictor Bot AI • Signal active";
     predictorInterval = setInterval(() => {
-        lastPrediction = cyclicPredict(min, max);
+        lastPrediction = generateSignal(min, max);
         predValue.textContent = lastPrediction.toFixed(2) + "x";
     }, 160);
 }
@@ -314,8 +279,6 @@ function stopPredictor() {
         predictorInterval = null;
     }
 }
-
-/* ====================== SOCKET ====================== */
 
 socket.on("connect", () => {
     connected = true;
@@ -370,16 +333,14 @@ socket.on("number_generated", data => {
     message.textContent = `Number received: ${data.number}`;
 });
 
-/* COUNTDOWN → start tight predictor */
 socket.on("round_countdown", data => {
     if (!data) return;
-
     setPhase("countdown");
     if (data.roundId) roundIdEl.textContent = data.roundId;
 
     const seconds = Number(data.seconds) || 5;
     timerEl.textContent = `Starting in ${seconds}s`;
-    phaseText.textContent = "Result locked on server • Predictor Bot AI running";
+    phaseText.textContent = "Result locked • Prediction active";
 
     multiplierEl.className = "multiplier waiting";
     multiplierEl.textContent = "—";
@@ -401,7 +362,7 @@ socket.on("round_started", data => {
 
     stopPredictor();
     if (lastPrediction) {
-        predMeta.textContent = `Final prediction held: ${lastPrediction.toFixed(2)}x`;
+        predMeta.textContent = `Final prediction: ${lastPrediction.toFixed(2)}x`;
     }
 
     if (typeof data.multiplier === "number") showMultiplier(data.multiplier);
@@ -449,7 +410,6 @@ socket.on("error_message", data => {
     message.textContent = data?.message || "Server error.";
 });
 
-/* REQUEST */
 requestBtn.addEventListener("click", () => {
     if (!connected) return;
     if (currentPhase === "countdown" || currentPhase === "running") {
@@ -474,7 +434,6 @@ requestBtn.addEventListener("click", () => {
     socket.emit("generate_number", { min, max });
 });
 
-/* HELPERS */
 function setPhase(phase) {
     currentPhase = String(phase).toLowerCase();
     serverPhase.textContent = currentPhase.toUpperCase();
