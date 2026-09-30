@@ -3,21 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>No-Gen — Live Signal Engine</title>
-
+<title>No-Gen — Live Signal Engine + Predictor Bot AI</title>
 <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
-
 <style>
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
+* { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
     --bg: #070b12;
-    --panel: #0d131d;
-    --panel2: #111925;
     --border: rgba(255,255,255,.08);
     --text: #f4f7fb;
     --muted: #8290a3;
@@ -25,595 +16,216 @@
     --green: #35e58b;
     --red: #ff4d67;
     --blue: #4da3ff;
+    --purple: #b57bff;
 }
-
 body {
     min-height: 100vh;
-    background:
-        radial-gradient(circle at top, #172333 0%, #070b12 45%, #04060a 100%);
+    background: radial-gradient(circle at top, #172333 0%, #070b12 45%, #04060a 100%);
     color: var(--text);
     font-family: Inter, Arial, sans-serif;
 }
-
-.app {
-    width: min(1050px, 94%);
-    margin: auto;
-    padding: 25px 0 50px;
-}
-
-/* HEADER */
-
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 22px;
-}
-
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
+.app { width: min(1100px, 94%); margin: auto; padding: 25px 0 50px; }
+.header { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 22px; }
+.brand { display: flex; align-items: center; gap: 12px; }
 .logo {
-    width: 45px;
-    height: 45px;
-    border-radius: 13px;
-    display: grid;
-    place-items: center;
-    background: linear-gradient(135deg, #ffb000, #ff6a00);
-    color: #111;
-    font-size: 21px;
-    font-weight: 900;
-    box-shadow: 0 0 25px rgba(255,176,0,.2);
+    width: 45px; height: 45px; border-radius: 13px; display: grid; place-items: center;
+    background: linear-gradient(135deg, #ffb000, #ff6a00); color: #111;
+    font-size: 21px; font-weight: 900; box-shadow: 0 0 25px rgba(255,176,0,.2);
 }
-
-.brand h1 {
-    font-size: 20px;
-}
-
-.brand p {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 3px;
-}
-
+.brand h1 { font-size: 20px; }
+.brand p { font-size: 12px; color: var(--muted); margin-top: 3px; }
 .connection {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 9px 13px;
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    background: rgba(255,255,255,.035);
-    font-size: 12px;
+    display: flex; align-items: center; gap: 8px; padding: 9px 13px;
+    border: 1px solid var(--border); border-radius: 20px;
+    background: rgba(255,255,255,.035); font-size: 12px;
 }
-
-.dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--red);
-}
-
-.dot.online {
-    background: var(--green);
-    box-shadow: 0 0 10px var(--green);
-}
-
-/* MAIN */
-
-.grid {
-    display: grid;
-    grid-template-columns: 1.45fr .85fr;
-    gap: 18px;
-}
-
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); }
+.dot.online { background: var(--green); box-shadow: 0 0 10px var(--green); }
+.grid { display: grid; grid-template-columns: 1.35fr .9fr; gap: 18px; }
 .card {
-    background: linear-gradient(
-        145deg,
-        rgba(20,29,42,.96),
-        rgba(8,12,18,.96)
-    );
-    border: 1px solid var(--border);
-    border-radius: 22px;
-    padding: 20px;
+    background: linear-gradient(145deg, rgba(20,29,42,.96), rgba(8,12,18,.96));
+    border: 1px solid var(--border); border-radius: 22px; padding: 20px;
     box-shadow: 0 20px 60px rgba(0,0,0,.25);
 }
-
-/* ROUND DISPLAY */
-
-.round-card {
-    min-height: 470px;
-    display: flex;
-    flex-direction: column;
-}
-
-.round-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.label {
-    color: var(--muted);
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.round-id {
-    font-family: monospace;
-    font-size: 12px;
-    color: var(--blue);
-}
-
-.phase {
-    margin-top: 35px;
-    text-align: center;
-    color: var(--muted);
-    font-size: 14px;
-    font-weight: 600;
-}
-
+.round-card { min-height: 480px; display: flex; flex-direction: column; }
+.round-top { display: flex; justify-content: space-between; align-items: center; }
+.label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+.round-id { font-family: monospace; font-size: 12px; color: var(--blue); }
+.phase { margin-top: 30px; text-align: center; color: var(--muted); font-size: 14px; font-weight: 600; }
 .multiplier {
-    flex: 1;
-    display: grid;
-    place-items: center;
-    text-align: center;
-    font-size: clamp(65px, 12vw, 115px);
-    font-weight: 900;
-    letter-spacing: -5px;
-    color: var(--accent);
-    text-shadow: 0 0 35px rgba(255,176,0,.18);
-    transition: .2s ease;
+    flex: 1; display: grid; place-items: center; text-align: center;
+    font-size: clamp(60px, 11vw, 105px); font-weight: 900; letter-spacing: -4px;
+    color: var(--accent); text-shadow: 0 0 35px rgba(255,176,0,.18); transition: .2s ease;
 }
-
-.multiplier.running {
-    transform: scale(1.02);
-}
-
-.multiplier.ended {
-    color: var(--red);
-    text-shadow: 0 0 35px rgba(255,77,103,.2);
-}
-
-.multiplier.waiting {
-    color: #718096;
-    text-shadow: none;
-}
-
-.timer {
-    text-align: center;
-    font-size: 17px;
-    color: var(--muted);
-    margin-bottom: 20px;
-}
-
-.status-bar {
-    display: flex;
-    justify-content: center;
-    gap: 9px;
-    flex-wrap: wrap;
-}
-
+.multiplier.running { transform: scale(1.02); }
+.multiplier.ended { color: var(--red); text-shadow: 0 0 35px rgba(255,77,103,.2); }
+.multiplier.waiting { color: #718096; text-shadow: none; }
+.timer { text-align: center; font-size: 16px; color: var(--muted); margin-bottom: 18px; }
+.status-bar { display: flex; justify-content: center; gap: 9px; flex-wrap: wrap; }
 .status-pill {
-    padding: 7px 11px;
-    border-radius: 10px;
-    background: rgba(255,255,255,.045);
-    border: 1px solid var(--border);
-    font-size: 11px;
-    color: var(--muted);
+    padding: 7px 11px; border-radius: 10px; background: rgba(255,255,255,.045);
+    border: 1px solid var(--border); font-size: 11px; color: var(--muted);
 }
-
-/* NUMBER REQUEST */
-
-.request-card h2 {
-    font-size: 17px;
-    margin-bottom: 7px;
-}
-
-.request-card > p {
-    color: var(--muted);
-    font-size: 12px;
-    line-height: 1.5;
-    margin-bottom: 18px;
-}
-
+.request-card h2, .predictor-card h2 { font-size: 17px; margin-bottom: 7px; }
+.request-card > p, .predictor-card > p { color: var(--muted); font-size: 12px; line-height: 1.5; margin-bottom: 16px; }
 .number-box {
-    min-height: 105px;
-    border-radius: 17px;
-    background: #080d14;
-    border: 1px solid var(--border);
-    display: grid;
-    place-items: center;
-    margin-bottom: 18px;
+    min-height: 90px; border-radius: 17px; background: #080d14;
+    border: 1px solid var(--border); display: grid; place-items: center; margin-bottom: 16px;
 }
-
-.number {
-    font-size: 43px;
-    font-weight: 900;
-    color: var(--green);
-}
-
-.number.empty {
-    color: #536071;
-    font-size: 27px;
-}
-
-.inputs {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 12px;
-}
-
-.input-group label {
-    display: block;
-    color: var(--muted);
-    font-size: 11px;
-    margin-bottom: 6px;
-}
-
+.number { font-size: 38px; font-weight: 900; color: var(--green); }
+.number.empty { color: #536071; font-size: 24px; }
+.inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.input-group label { display: block; color: var(--muted); font-size: 11px; margin-bottom: 6px; }
 input {
-    width: 100%;
-    padding: 13px;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    background: #080d14;
-    color: white;
-    outline: none;
+    width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border);
+    background: #080d14; color: white; outline: none;
 }
-
-input:focus {
-    border-color: rgba(255,176,0,.5);
-}
-
+input:focus { border-color: rgba(255,176,0,.5); }
 button {
-    width: 100%;
-    padding: 14px;
-    border: none;
-    border-radius: 13px;
-    background: linear-gradient(135deg, #ffc400, #ff8c00);
-    color: #111;
-    font-size: 14px;
-    font-weight: 900;
-    cursor: pointer;
-    transition: .2s;
+    width: 100%; padding: 14px; border: none; border-radius: 13px;
+    background: linear-gradient(135deg, #ffc400, #ff8c00); color: #111;
+    font-size: 14px; font-weight: 900; cursor: pointer; transition: .2s;
 }
-
-button:hover:not(:disabled) {
-    transform: translateY(-1px);
-    filter: brightness(1.08);
-}
-
-button:disabled {
-    cursor: not-allowed;
-    opacity: .45;
-}
-
+button:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.08); }
+button:disabled { cursor: not-allowed; opacity: .45; }
 .message {
-    min-height: 38px;
-    margin-top: 13px;
-    padding: 10px;
-    border-radius: 11px;
-    background: rgba(255,255,255,.035);
-    color: var(--muted);
-    font-size: 11px;
-    line-height: 1.4;
+    min-height: 36px; margin-top: 12px; padding: 10px; border-radius: 11px;
+    background: rgba(255,255,255,.035); color: var(--muted); font-size: 11px; line-height: 1.4;
 }
-
-/* HISTORY */
-
-.history-card {
-    margin-top: 18px;
+.predictor-card { margin-top: 18px; }
+.pred-value {
+    font-size: 42px; font-weight: 900; color: var(--purple);
+    text-align: center; margin: 12px 0; text-shadow: 0 0 20px rgba(181,123,255,.25);
 }
-
-.history-title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 13px;
-}
-
-.history-title h2 {
-    font-size: 16px;
-}
-
-.history-title span {
-    font-size: 11px;
-    color: var(--muted);
-}
-
-.history {
-    display: flex;
-    gap: 9px;
-    overflow-x: auto;
-    padding-bottom: 5px;
-}
-
+.pred-meta { text-align: center; font-size: 12px; color: var(--muted); }
+.history-card { margin-top: 18px; }
+.history-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 13px; }
+.history-title h2 { font-size: 16px; }
+.history-title span { font-size: 11px; color: var(--muted); }
+.history { display: flex; gap: 9px; overflow-x: auto; padding-bottom: 5px; }
 .history-item {
-    min-width: 90px;
-    padding: 12px 10px;
-    background: rgba(255,255,255,.035);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    text-align: center;
+    min-width: 90px; padding: 12px 10px; background: rgba(255,255,255,.035);
+    border: 1px solid var(--border); border-radius: 12px; text-align: center;
 }
-
-.history-item strong {
-    display: block;
-    font-size: 16px;
-    color: var(--accent);
-}
-
-.history-item small {
-    display: block;
-    margin-top: 4px;
-    color: var(--muted);
-    font-size: 9px;
-}
-
-/* RULES */
-
-.rules {
-    margin-top: 18px;
-}
-
-.rules h2 {
-    font-size: 15px;
-    margin-bottom: 12px;
-}
-
-.rule {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
-    color: var(--muted);
-    font-size: 11px;
-    line-height: 1.5;
-}
-
-.rule b {
-    color: var(--text);
-}
-
-/* MOBILE */
-
-@media (max-width: 760px) {
-    .grid {
-        grid-template-columns: 1fr;
-    }
-
-    .header {
-        align-items: flex-start;
-    }
-
-    .round-card {
-        min-height: 410px;
-    }
-
-    .multiplier {
-        font-size: 76px;
-    }
+.history-item strong { display: block; font-size: 16px; color: var(--accent); }
+.history-item small { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; }
+.rules { margin-top: 18px; }
+.rules h2 { font-size: 15px; margin-bottom: 12px; }
+.rule { display: flex; gap: 10px; margin-bottom: 10px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.rule b { color: var(--text); }
+@media (max-width: 800px) {
+    .grid { grid-template-columns: 1fr; }
+    .multiplier { font-size: 72px; }
 }
 </style>
 </head>
-
 <body>
-
 <div class="app">
 
-    <header class="header">
+<header class="header">
+    <div class="brand">
+        <div class="logo">NG</div>
+        <div>
+            <h1>No-Gen</h1>
+            <p>Server-authoritative + Predictor Bot AI</p>
+        </div>
+    </div>
+    <div class="connection">
+        <span class="dot" id="connectionDot"></span>
+        <span id="connectionText">Connecting...</span>
+    </div>
+</header>
 
-        <div class="brand">
-            <div class="logo">NG</div>
+<main class="grid">
 
+    <!-- LIVE ROUND -->
+    <section class="card round-card">
+        <div class="round-top">
             <div>
-                <h1>No-Gen</h1>
-                <p>Server-authoritative live signal engine</p>
+                <div class="label">Current Round</div>
+                <div class="round-id" id="roundId">Waiting...</div>
             </div>
+            <div class="status-pill" id="serverPhase">IDLE</div>
         </div>
 
-        <div class="connection">
-            <span class="dot" id="connectionDot"></span>
-            <span id="connectionText">Connecting...</span>
+        <div class="phase" id="phaseText">Waiting for the next round</div>
+
+        <div class="multiplier waiting" id="multiplier">—</div>
+
+        <div class="timer" id="timer">Waiting for signal</div>
+
+        <div class="status-bar">
+            <div class="status-pill">Result: <b id="lockedResult">—</b></div>
+            <div class="status-pill">Round: <b id="roundStatus">Idle</b></div>
         </div>
+    </section>
 
-    </header>
-
-
-    <main class="grid">
-
-        <!-- LIVE ROUND -->
-
-        <section class="card round-card">
-
-            <div class="round-top">
-
-                <div>
-                    <div class="label">Current Round</div>
-                    <div class="round-id" id="roundId">Waiting...</div>
-                </div>
-
-                <div class="status-pill" id="serverPhase">
-                    IDLE
-                </div>
-
-            </div>
-
-            <div class="phase" id="phaseText">
-                Waiting for the next round
-            </div>
-
-            <div
-                class="multiplier waiting"
-                id="multiplier"
-            >
-                —
-            </div>
-
-            <div class="timer" id="timer">
-                Waiting for signal
-            </div>
-
-            <div class="status-bar">
-
-                <div class="status-pill">
-                    Result: <b id="lockedResult">—</b>
-                </div>
-
-                <div class="status-pill">
-                    Round: <b id="roundStatus">Idle</b>
-                </div>
-
-            </div>
-
-        </section>
-
-
+    <!-- RIGHT COLUMN -->
+    <div>
         <!-- REQUEST -->
-
         <section class="card request-card">
-
             <h2>Request Number</h2>
-
-            <p>
-                Request a number from the server. Once the number is
-                delivered, the server-controlled live sequence can begin.
-            </p>
+            <p>Request starts the server round. The real crash point is locked on the server before countdown.</p>
 
             <div class="number-box">
-
-                <div
-                    class="number empty"
-                    id="generatedNumber"
-                >
-                    No number yet
-                </div>
-
+                <div class="number empty" id="generatedNumber">No number yet</div>
             </div>
 
             <div class="inputs">
-
                 <div class="input-group">
                     <label>Minimum</label>
-                    <input
-                        type="number"
-                        id="min"
-                        value="1"
-                    >
+                    <input type="number" id="min" value="1.01" step="0.01">
                 </div>
-
                 <div class="input-group">
                     <label>Maximum</label>
-                    <input
-                        type="number"
-                        id="max"
-                        value="100"
-                    >
+                    <input type="number" id="max" value="100" step="0.01">
                 </div>
-
             </div>
 
-            <button
-                id="requestBtn"
-                disabled
-            >
-                REQUEST NUMBER
-            </button>
-
-            <div
-                class="message"
-                id="message"
-            >
-                Connecting to server...
-            </div>
-
+            <button id="requestBtn" disabled>REQUEST NUMBER</button>
+            <div class="message" id="message">Connecting to server...</div>
         </section>
 
-    </main>
+        <!-- PREDICTOR BOT AI -->
+        <section class="card predictor-card">
+            <h2>Predictor Bot AI</h2>
+            <p>
+                Tight Aviator-style signals with low probability of high multipliers.<br>
+                Uses cyclic local-time continuity for smooth prediction during countdown.
+            </p>
 
+            <div class="pred-value" id="predValue">—</div>
+            <div class="pred-meta" id="predMeta">Waiting for countdown...</div>
+        </section>
+    </div>
+</main>
 
-    <!-- HISTORY -->
-
-    <section class="card history-card">
-
-        <div class="history-title">
-            <h2>Completed Rounds</h2>
-            <span>Server results</span>
+<!-- HISTORY -->
+<section class="card history-card">
+    <div class="history-title">
+        <h2>Completed Rounds</h2>
+        <span>Server results</span>
+    </div>
+    <div class="history" id="history">
+        <div class="history-item">
+            <strong>—</strong>
+            <small>No rounds yet</small>
         </div>
+    </div>
+</section>
 
-        <div
-            class="history"
-            id="history"
-        >
-            <div class="history-item">
-                <strong>—</strong>
-                <small>No rounds yet</small>
-            </div>
-        </div>
-
-    </section>
-
-
-    <!-- RULES -->
-
-    <section class="card rules">
-
-        <h2>Round Rules</h2>
-
-        <div class="rule">
-            <span>01</span>
-            <div>
-                <b>Server authority:</b>
-                round results are determined by the backend, not this page.
-            </div>
-        </div>
-
-        <div class="rule">
-            <span>02</span>
-            <div>
-                <b>Result lock:</b>
-                the round result is established before the countdown begins.
-            </div>
-        </div>
-
-        <div class="rule">
-            <span>03</span>
-            <div>
-                <b>Countdown lock:</b>
-                a new number cannot be requested while a round is counting
-                down or running.
-            </div>
-        </div>
-
-        <div class="rule">
-            <span>04</span>
-            <div>
-                <b>One round, one result:</b>
-                the live multiplier progresses toward the already-established
-                result and does not generate another result during the live phase.
-            </div>
-        </div>
-
-        <div class="rule">
-            <span>05</span>
-            <div>
-                <b>Shared round:</b>
-                connected clients receive the same authoritative round state.
-            </div>
-        </div>
-
-    </section>
+<!-- RULES -->
+<section class="card rules">
+    <h2>How it works</h2>
+    <div class="rule"><span>01</span><div><b>Server locks the real result</b> before countdown starts.</div></div>
+    <div class="rule"><span>02</span><div><b>Predictor Bot AI</b> shows tight Aviator-style signals during countdown (high multipliers are rare).</div></div>
+    <div class="rule"><span>03</span><div>The live multiplier is driven only by the server and ends exactly at the locked crash point.</div></div>
+    <div class="rule"><span>04</span><div>Prediction is visual only — it never overrides the server result.</div></div>
+</section>
 
 </div>
 
-
 <script>
-
 const BACKEND_URL = "https://no-gen.bonto.run";
 
 const socket = io(BACKEND_URL, {
@@ -623,532 +235,286 @@ const socket = io(BACKEND_URL, {
     reconnectionDelay: 1000
 });
 
+/* DOM */
+const connectionDot   = document.getElementById("connectionDot");
+const connectionText  = document.getElementById("connectionText");
+const requestBtn      = document.getElementById("requestBtn");
+const generatedNumber = document.getElementById("generatedNumber");
+const minInput        = document.getElementById("min");
+const maxInput        = document.getElementById("max");
+const message         = document.getElementById("message");
+const multiplierEl    = document.getElementById("multiplier");
+const timerEl         = document.getElementById("timer");
+const phaseText       = document.getElementById("phaseText");
+const serverPhase     = document.getElementById("serverPhase");
+const roundIdEl       = document.getElementById("roundId");
+const lockedResult    = document.getElementById("lockedResult");
+const roundStatus     = document.getElementById("roundStatus");
+const historyEl       = document.getElementById("history");
+const predValue       = document.getElementById("predValue");
+const predMeta        = document.getElementById("predMeta");
 
-/* ELEMENTS */
+/* STATE */
+let connected         = false;
+let currentPhase      = "idle";
+let predictorInterval = null;
+let lastPrediction    = null;
 
-const connectionDot =
-    document.getElementById("connectionDot");
+/* ====================== PREDICTOR BOT AI (Tight Aviator-style) ====================== */
+/*
+ * Heavy bias toward low multipliers.
+ * Probability of high signals is very low.
+ * Cyclic local time is used only for smooth visual continuity.
+ */
+function cyclicPredict(min = 1.00, max = 100) {
+    const now = Date.now();
 
-const connectionText =
-    document.getElementById("connectionText");
+    // Smooth continuous seeds
+    const t1 = (now / 1000) % 61;
+    const t2 = (now / 2347) % 29;
+    const t3 = (now / 9173) % 13;
 
-const requestBtn =
-    document.getElementById("requestBtn");
+    let r = (
+        Math.sin(t1 * 0.37) * 0.42 +
+        Math.sin(t2 * 1.13) * 0.33 +
+        Math.cos(t3 * 2.19) * 0.25
+    );
 
-const generatedNumber =
-    document.getElementById("generatedNumber");
+    r = (r + 1) / 2;
+    r = Math.max(0.0001, Math.min(0.9999, r));
 
-const minInput =
-    document.getElementById("min");
+    // Classic crash inverse distribution
+    let crash = 0.99 / (1 - r);
 
-const maxInput =
-    document.getElementById("max");
+    // Extra tightening – make high multipliers rare
+    if (crash > 10)  crash = 10 + (crash - 10) * 0.35;
+    if (crash > 30)  crash = 30 + (crash - 30) * 0.25;
+    if (crash > 100) crash = 100;
 
-const message =
-    document.getElementById("message");
+    // Tiny continuity noise
+    crash += Math.sin(now / 410) * 0.04;
 
-const multiplier =
-    document.getElementById("multiplier");
+    crash = Math.max(min, Math.min(max, crash));
+    return Math.round(crash * 100) / 100;
+}
 
-const timer =
-    document.getElementById("timer");
+function startPredictor(min, max) {
+    stopPredictor();
+    predMeta.textContent = "Predictor Bot AI • Tight Aviator-style signals";
 
-const phaseText =
-    document.getElementById("phaseText");
+    predictorInterval = setInterval(() => {
+        lastPrediction = cyclicPredict(min, max);
+        predValue.textContent = lastPrediction.toFixed(2) + "x";
+    }, 160);
+}
 
-const serverPhase =
-    document.getElementById("serverPhase");
+function stopPredictor() {
+    if (predictorInterval) {
+        clearInterval(predictorInterval);
+        predictorInterval = null;
+    }
+}
 
-const roundId =
-    document.getElementById("roundId");
-
-const lockedResult =
-    document.getElementById("lockedResult");
-
-const roundStatus =
-    document.getElementById("roundStatus");
-
-const history =
-    document.getElementById("history");
-
-
-/* LOCAL UI STATE */
-
-let connected = false;
-let currentPhase = "idle";
-
-
-/* CONNECTION */
+/* ====================== SOCKET ====================== */
 
 socket.on("connect", () => {
-
     connected = true;
-
     connectionDot.classList.add("online");
-
-    connectionText.textContent =
-        "Connected";
-
-    message.textContent =
-        "Connected to the No-Gen server.";
-
+    connectionText.textContent = "Connected";
+    message.textContent = "Connected to the No-Gen server.";
     updateButton();
-
+    socket.emit("get_round_state");
 });
-
 
 socket.on("disconnect", () => {
-
     connected = false;
-
     connectionDot.classList.remove("online");
-
-    connectionText.textContent =
-        "Disconnected";
-
+    connectionText.textContent = "Disconnected";
     requestBtn.disabled = true;
-
-    message.textContent =
-        "Connection lost. Waiting for server...";
-
+    message.textContent = "Connection lost.";
+    stopPredictor();
 });
-
 
 socket.on("connect_error", () => {
-
     connected = false;
-
     connectionDot.classList.remove("online");
-
-    connectionText.textContent =
-        "Connection error";
-
+    connectionText.textContent = "Connection error";
     requestBtn.disabled = true;
-
 });
-
-
-/* SERVER STATUS */
 
 socket.on("server_status", data => {
-
-    if (data && data.message) {
-        message.textContent = data.message;
-    }
-
+    if (data?.message) message.textContent = data.message;
 });
-
-
-/* CURRENT ROUND STATE */
 
 socket.on("round_state", data => {
-
     if (!data) return;
+    if (data.id) roundIdEl.textContent = data.id;
+    if (data.phase) setPhase(data.phase);
 
-    if (data.id) {
-        roundId.textContent = data.id;
+    if (data.phase === "ended" && typeof data.crashPoint === "number") {
+        lockedResult.textContent = data.crashPoint.toFixed(2) + "x";
+    } else {
+        lockedResult.textContent = "Locked";
     }
 
-    if (data.phase) {
-        setPhase(data.phase);
-    }
-
-    if (typeof data.multiplier === "number") {
-
-        showMultiplier(data.multiplier);
-
-    }
-
+    if (typeof data.multiplier === "number") showMultiplier(data.multiplier);
     if (typeof data.countdown === "number") {
-
-        timer.textContent =
-            `Starting in ${data.countdown}s`;
-
+        timerEl.textContent = `Starting in ${data.countdown}s`;
     }
-
-    if (typeof data.crashPoint === "number") {
-
-        lockedResult.textContent =
-            `${data.crashPoint.toFixed(2)}x`;
-
-    }
-
 });
-
-
-/* NUMBER RESULT */
 
 socket.on("number_generated", data => {
-
     if (!data) return;
-
     generatedNumber.classList.remove("empty");
-
-    generatedNumber.textContent =
-        data.number;
-
-    message.textContent =
-        `Number generated: ${data.number}`;
-
+    generatedNumber.textContent = data.number;
+    message.textContent = `Number received: ${data.number}`;
 });
 
-
-/* COUNTDOWN */
-
+/* COUNTDOWN → start tight predictor */
 socket.on("round_countdown", data => {
-
     if (!data) return;
 
     setPhase("countdown");
+    if (data.roundId) roundIdEl.textContent = data.roundId;
 
-    if (data.roundId) {
-        roundId.textContent = data.roundId;
-    }
+    const seconds = Number(data.seconds) || 5;
+    timerEl.textContent = `Starting in ${seconds}s`;
+    phaseText.textContent = "Result locked on server • Predictor Bot AI running";
 
-    const seconds =
-        Number(data.seconds);
+    multiplierEl.className = "multiplier waiting";
+    multiplierEl.textContent = "—";
+    lockedResult.textContent = "Locked";
 
-    timer.textContent =
-        `Starting in ${seconds}s`;
-
-    phaseText.textContent =
-        "Round result locked • Countdown active";
-
-    multiplier.className =
-        "multiplier waiting";
-
-    multiplier.textContent =
-        "—";
-
-    /*
-     * Important:
-     * The frontend does NOT generate anything here.
-     */
+    const min = Number(minInput.value) || 1.01;
+    const max = Number(maxInput.value) || 100;
+    startPredictor(min, max);
 });
-
-
-/* ROUND START */
 
 socket.on("round_started", data => {
-
     if (!data) return;
-
     setPhase("running");
+    if (data.roundId) roundIdEl.textContent = data.roundId;
 
-    if (data.roundId) {
-        roundId.textContent = data.roundId;
+    phaseText.textContent = "LIVE SIGNAL";
+    timerEl.textContent = "Live";
+    lockedResult.textContent = "Locked";
+
+    stopPredictor();
+    if (lastPrediction) {
+        predMeta.textContent = `Final prediction held: ${lastPrediction.toFixed(2)}x`;
     }
 
-    phaseText.textContent =
-        "LIVE SIGNAL";
-
-    timer.textContent =
-        "Live";
-
-    if (typeof data.multiplier === "number") {
-        showMultiplier(data.multiplier);
-    }
-
-    if (typeof data.crashPoint === "number") {
-
-        lockedResult.textContent =
-            `${data.crashPoint.toFixed(2)}x`;
-
-    }
-
+    if (typeof data.multiplier === "number") showMultiplier(data.multiplier);
 });
-
-
-/* LIVE MULTIPLIER */
 
 socket.on("round_update", data => {
-
     if (!data) return;
-
     setPhase("running");
-
-    if (data.roundId) {
-        roundId.textContent = data.roundId;
-    }
-
-    if (typeof data.multiplier === "number") {
-
-        showMultiplier(data.multiplier);
-
-    }
-
-    phaseText.textContent =
-        "LIVE SIGNAL";
-
-    timer.textContent =
-        "Running";
-
+    if (data.roundId) roundIdEl.textContent = data.roundId;
+    if (typeof data.multiplier === "number") showMultiplier(data.multiplier);
+    phaseText.textContent = "LIVE SIGNAL";
+    timerEl.textContent = "Running";
 });
-
-
-/* ROUND END */
 
 socket.on("round_ended", data => {
-
     if (!data) return;
-
     setPhase("ended");
+    stopPredictor();
 
-    const result =
-        Number(data.multiplier ?? data.crashPoint);
-
+    const result = Number(data.multiplier ?? data.crashPoint);
     if (Number.isFinite(result)) {
-
         showMultiplier(result);
+        lockedResult.textContent = result.toFixed(2) + "x";
+        addHistory(result, data.roundId);
 
-        lockedResult.textContent =
-            `${result.toFixed(2)}x`;
-
-        addHistory(
-            result,
-            data.roundId
-        );
-
+        if (lastPrediction) {
+            const diff = Math.abs(result - lastPrediction).toFixed(2);
+            predMeta.textContent = `Prediction ${lastPrediction.toFixed(2)}x → Real ${result.toFixed(2)}x (Δ ${diff})`;
+        }
     }
 
-    phaseText.textContent =
-        "ROUND ENDED";
-
-    timer.textContent =
-        "Waiting for next request";
-
-    message.textContent =
-        `Round completed at ${result.toFixed(2)}x`;
-
+    phaseText.textContent = "ROUND ENDED";
+    timerEl.textContent = "Waiting for next request";
+    message.textContent = `Round completed at ${result.toFixed(2)}x`;
     updateButton();
-
 });
-
-
-/* GENERATION ERROR */
 
 socket.on("generation_error", data => {
-
-    message.textContent =
-        data?.message ||
-        "The request was rejected.";
-
+    message.textContent = data?.message || "Request rejected.";
     updateButton();
-
+    stopPredictor();
 });
-
-
-/* GENERAL ERROR */
 
 socket.on("error_message", data => {
-
-    message.textContent =
-        data?.message ||
-        "Server error.";
-
+    message.textContent = data?.message || "Server error.";
 });
-
 
 /* REQUEST */
-
 requestBtn.addEventListener("click", () => {
-
     if (!connected) return;
-
-    if (
-        currentPhase === "countdown" ||
-        currentPhase === "running"
-    ) {
-
-        message.textContent =
-            "Request locked while the current round is active.";
-
+    if (currentPhase === "countdown" || currentPhase === "running") {
+        message.textContent = "Request locked while round is active.";
         return;
     }
 
-    const min =
-        Number(minInput.value);
+    const min = Number(minInput.value);
+    const max = Number(maxInput.value);
 
-    const max =
-        Number(maxInput.value);
-
-    if (
-        !Number.isFinite(min) ||
-        !Number.isFinite(max)
-    ) {
-
-        message.textContent =
-            "Enter valid minimum and maximum values.";
-
+    if (!Number.isFinite(min) || !Number.isFinite(max) || min > max) {
+        message.textContent = "Enter valid min / max values.";
         return;
     }
-
-    if (min > max) {
-
-        message.textContent =
-            "Minimum cannot be greater than maximum.";
-
-        return;
-    }
-
-    /*
-     * Do NOT generate the number locally.
-     * The server is responsible for generating it.
-     */
 
     requestBtn.disabled = true;
+    message.textContent = "Request sent to server...";
+    predValue.textContent = "—";
+    predMeta.textContent = "Waiting for countdown...";
+    lastPrediction = null;
 
-    message.textContent =
-        "Request sent to server...";
-
-    socket.emit("generate_number", {
-        min,
-        max
-    });
-
+    socket.emit("generate_number", { min, max });
 });
 
-
-/* PHASE HANDLER */
-
+/* HELPERS */
 function setPhase(phase) {
-
-    currentPhase =
-        String(phase).toLowerCase();
-
-    serverPhase.textContent =
-        currentPhase.toUpperCase();
-
-    roundStatus.textContent =
-        capitalize(currentPhase);
-
+    currentPhase = String(phase).toLowerCase();
+    serverPhase.textContent = currentPhase.toUpperCase();
+    roundStatus.textContent = currentPhase.charAt(0).toUpperCase() + currentPhase.slice(1);
     updateButton();
-
 }
-
-
-/* BUTTON BOUNDARY */
 
 function updateButton() {
-
     if (!connected) {
-
         requestBtn.disabled = true;
-
         return;
     }
-
-    /*
-     * No new number while countdown
-     * or live signal is active.
-     */
-
-    if (
-        currentPhase === "countdown" ||
-        currentPhase === "running"
-    ) {
-
+    if (currentPhase === "countdown" || currentPhase === "running") {
         requestBtn.disabled = true;
-
-        requestBtn.textContent =
-            "ROUND ACTIVE";
-
+        requestBtn.textContent = "ROUND ACTIVE";
         return;
     }
-
     requestBtn.disabled = false;
-
-    requestBtn.textContent =
-        "REQUEST NUMBER";
-
+    requestBtn.textContent = "REQUEST NUMBER";
 }
-
-
-/* MULTIPLIER */
 
 function showMultiplier(value) {
-
     const n = Number(value);
-
     if (!Number.isFinite(n)) return;
-
-    multiplier.textContent =
-        `${n.toFixed(2)}x`;
-
-    if (currentPhase === "running") {
-
-        multiplier.className =
-            "multiplier running";
-
-    } else if (currentPhase === "ended") {
-
-        multiplier.className =
-            "multiplier ended";
-
-    } else {
-
-        multiplier.className =
-            "multiplier";
-
-    }
-
+    multiplierEl.textContent = n.toFixed(2) + "x";
+    multiplierEl.className = currentPhase === "running" ? "multiplier running" :
+                             currentPhase === "ended"   ? "multiplier ended"   : "multiplier";
 }
-
-
-/* HISTORY */
 
 function addHistory(result, id) {
-
-    if (!history) return;
-
-    /*
-     * Remove placeholder.
-     */
-
-    if (
-        history.children.length === 1 &&
-        history.children[0].querySelector("small")?.textContent ===
-        "No rounds yet"
-    ) {
-        history.innerHTML = "";
+    if (historyEl.children.length === 1 &&
+        historyEl.children[0].querySelector("small")?.textContent === "No rounds yet") {
+        historyEl.innerHTML = "";
     }
-
-    const item =
-        document.createElement("div");
-
-    item.className =
-        "history-item";
-
-    item.innerHTML = `
-        <strong>${result.toFixed(2)}x</strong>
-        <small>${id || "Completed"}</small>
-    `;
-
-    history.prepend(item);
-
-    /*
-     * Keep only recent rounds.
-     */
-
-    while (history.children.length > 12) {
-        history.removeChild(history.lastElementChild);
-    }
-
+    const item = document.createElement("div");
+    item.className = "history-item";
+    item.innerHTML = `<strong>${result.toFixed(2)}x</strong><small>${id || "Completed"}</small>`;
+    historyEl.prepend(item);
+    while (historyEl.children.length > 12) historyEl.removeChild(historyEl.lastElementChild);
 }
-
-
-/* UTILITY */
-
-function capitalize(value) {
-
-    if (!value) return "";
-
-    return value.charAt(0).toUpperCase() +
-           value.slice(1);
-
-}
-
 </script>
-
 </body>
-</html>
+    </html>
