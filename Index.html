@@ -16,8 +16,7 @@
 
 body {
     min-height: 100vh;
-    background:
-        radial-gradient(circle at top, #202020, #080808 65%);
+    background: radial-gradient(circle at top, #202020, #080808 65%);
     color: #fff;
     font-family: Arial, Helvetica, sans-serif;
     display: flex;
@@ -67,18 +66,41 @@ body {
     box-shadow: 0 0 12px #20e080;
 }
 
+/* ========== SIGNAL SECTION ========== */
+.signal-box {
+    background: #171717;
+    border: 1px solid #252525;
+    border-radius: 18px;
+    padding: 16px;
+    margin-bottom: 14px;
+    text-align: center;
+}
+
+.signal-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #777;
+    margin-bottom: 8px;
+}
+
+.signal-value {
+    font-size: 28px;
+    font-weight: 900;
+    color: #fff;
+}
+
+/* ========== RUNNING SECTION ========== */
 .display {
-    min-height: 240px;
+    min-height: 200px;
     border-radius: 20px;
-    background:
-        linear-gradient(145deg, #171717, #0c0c0c);
+    background: linear-gradient(145deg, #171717, #0c0c0c);
     border: 1px solid #252525;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     margin-bottom: 18px;
-    overflow: hidden;
 }
 
 .phase {
@@ -100,53 +122,14 @@ body {
     transform: scale(1.02);
 }
 
-.prediction {
-    margin-top: 18px;
-    font-size: 14px;
-    color: #aaa;
-}
-
-.prediction strong {
-    color: #fff;
-}
-
 .countdown {
     margin-top: 16px;
     font-size: 34px;
     font-weight: 800;
 }
 
-.controls {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.input-box {
-    background: #181818;
-    border: 1px solid #292929;
-    border-radius: 14px;
-    padding: 12px;
-}
-
-.input-box label {
-    display: block;
-    color: #777;
-    font-size: 11px;
-    margin-bottom: 5px;
-}
-
-.input-box input {
-    width: 100%;
-    border: 0;
-    outline: 0;
-    background: transparent;
-    color: white;
-    font-size: 16px;
-}
-
 button {
-    grid-column: 1 / -1;
+    width: 100%;
     border: 0;
     border-radius: 15px;
     padding: 15px;
@@ -192,79 +175,33 @@ button:disabled {
 
     <div class="header">
         <div class="logo">NO-GEN</div>
-
         <div class="status">
             <span class="dot" id="statusDot"></span>
             <span id="statusText">Connecting...</span>
         </div>
     </div>
 
+    <!-- SIGNAL SECTION -->
+    <div class="signal-box">
+        <div class="signal-label">Signal</div>
+        <div class="signal-value" id="prediction">—</div>
+    </div>
+
+    <!-- RUNNING SECTION -->
     <div class="display">
-
-        <div class="phase" id="phase">
-            WAITING
-        </div>
-
-        <div class="multiplier" id="multiplier">
-            1.00x
-        </div>
-
-        <div class="prediction" id="prediction">
-            Prediction: —
-        </div>
-
+        <div class="phase" id="phase">WAITING</div>
+        <div class="multiplier" id="multiplier">1.00x</div>
         <div class="countdown" id="countdown"></div>
-
     </div>
 
-    <div class="controls">
+    <button id="requestBtn">REQUEST SIGNAL</button>
 
-        <div class="input-box">
-            <label>MIN</label>
-            <input
-                id="min"
-                type="number"
-                value="1.01"
-                min="1.01"
-                step="0.01"
-            >
-        </div>
-
-        <div class="input-box">
-            <label>MAX</label>
-            <input
-                id="max"
-                type="number"
-                value="100"
-                min="1.01"
-                step="0.01"
-            >
-        </div>
-
-        <button id="requestBtn">
-            REQUEST PREDICTION
-        </button>
-
-    </div>
-
-    <div class="message" id="message">
-        Waiting for server...
-    </div>
-
-    <div class="round-id" id="roundId">
-        NO ACTIVE ROUND
-    </div>
+    <div class="message" id="message">Waiting for server...</div>
+    <div class="round-id" id="roundId">NO ACTIVE ROUND</div>
 
 </div>
 
 <script>
-
-/*
-==================================================
- BACKEND
-==================================================
-*/
-
 const BACKEND_URL = "https://no-gen.bonto.run";
 
 const socket = io(BACKEND_URL, {
@@ -274,357 +211,139 @@ const socket = io(BACKEND_URL, {
     reconnectionDelay: 1000
 });
 
-
-/*
-==================================================
- DOM
-==================================================
-*/
-
 const phaseEl = document.getElementById("phase");
 const multiplierEl = document.getElementById("multiplier");
 const predictionEl = document.getElementById("prediction");
 const countdownEl = document.getElementById("countdown");
 const messageEl = document.getElementById("message");
 const roundIdEl = document.getElementById("roundId");
-
 const requestBtn = document.getElementById("requestBtn");
-const minInput = document.getElementById("min");
-const maxInput = document.getElementById("max");
-
 const statusDot = document.getElementById("statusDot");
 const statusText = document.getElementById("statusText");
 
-
-/*
-==================================================
- CONNECTION
-==================================================
-*/
-
 socket.on("connect", () => {
-
     statusDot.classList.add("online");
     statusText.textContent = "Connected";
-
-    messageEl.textContent =
-        "Connected to authoritative server.";
-
+    messageEl.textContent = "Connected to authoritative server.";
     socket.emit("get_round_state");
 });
 
-
 socket.on("disconnect", () => {
-
     statusDot.classList.remove("online");
     statusText.textContent = "Disconnected";
-
-    messageEl.textContent =
-        "Connection lost. Reconnecting...";
+    messageEl.textContent = "Connection lost. Reconnecting...";
 });
 
-
 socket.on("connect_error", () => {
-
     statusDot.classList.remove("online");
     statusText.textContent = "Connection error";
 });
 
-
-/*
-==================================================
- REQUEST PREDICTION
-==================================================
-*/
-
+/* Request with fixed range (no min/max UI) */
 requestBtn.addEventListener("click", () => {
-
-    const min = Number(minInput.value);
-    const max = Number(maxInput.value);
-
-    if (!Number.isFinite(min) ||
-        !Number.isFinite(max) ||
-        min < 1.01 ||
-        max <= min) {
-
-        messageEl.textContent =
-            "Enter a valid minimum and maximum.";
-
-        return;
-    }
-
     requestBtn.disabled = true;
-
-    predictionEl.innerHTML =
-        "Prediction: <strong>requesting...</strong>";
-
-    messageEl.textContent =
-        "Requesting prediction from server...";
+    predictionEl.textContent = "requesting...";
+    messageEl.textContent = "Requesting signal from server...";
 
     socket.emit("request_prediction", {
-        min,
-        max
+        min: 1.01,
+        max: 100
     });
 });
 
-
-/*
-==================================================
- PREDICTION RECEIVED
-==================================================
-*/
-
 socket.on("prediction_ready", (data) => {
-
-    predictionEl.innerHTML =
-        `Prediction: <strong>${data.prediction}x</strong>`;
-
-    roundIdEl.textContent =
-        `ROUND ${data.roundId}`;
-
-    phaseEl.textContent =
-        "PREDICTION LOCKED";
-
-    messageEl.textContent =
-        "Prediction locked. Waiting for countdown...";
-
-    /*
-     * Do NOT create a local timer here.
-     *
-     * The server controls the round.
-     */
+    predictionEl.textContent = data.prediction + "x";
+    roundIdEl.textContent = `ROUND ${data.roundId}`;
+    phaseEl.textContent = "SIGNAL LOCKED";
+    messageEl.textContent = "Signal locked. Waiting for countdown...";
 });
 
-
-/*
-==================================================
- COUNTDOWN
-==================================================
-*/
-
 socket.on("round_countdown", (data) => {
-
     phaseEl.textContent = "STARTING";
-
-    countdownEl.textContent =
-        data.seconds;
-
-    multiplierEl.textContent =
-        "1.00x";
-
-    roundIdEl.textContent =
-        `ROUND ${data.roundId}`;
-
-    messageEl.textContent =
-        "Round locked by server.";
-
+    countdownEl.textContent = data.seconds;
+    multiplierEl.textContent = "1.00x";
+    roundIdEl.textContent = `ROUND ${data.roundId}`;
+    messageEl.textContent = "Round locked by server.";
     requestBtn.disabled = true;
 });
 
-
-/*
-==================================================
- ROUND STARTED
-==================================================
-*/
-
 socket.on("round_started", (data) => {
-
-    phaseEl.textContent =
-        "LIVE";
-
+    phaseEl.textContent = "LIVE";
     countdownEl.textContent = "";
-
-    multiplierEl.textContent =
-        "1.00x";
-
+    multiplierEl.textContent = "1.00x";
     multiplierEl.classList.add("running");
-
-    roundIdEl.textContent =
-        `ROUND ${data.roundId}`;
-
-    messageEl.textContent =
-        "Live round running...";
+    roundIdEl.textContent = `ROUND ${data.roundId}`;
+    messageEl.textContent = "Live round running...";
 });
-
-
-/*
-==================================================
- LIVE SERVER UPDATE
-==================================================
-*/
 
 socket.on("round_update", (data) => {
-
-    /*
-     * The client NEVER calculates the multiplier.
-     *
-     * It simply displays the authoritative
-     * value received from Socket.IO.
-     */
-
-    multiplierEl.textContent =
-        Number(data.multiplier).toFixed(2) + "x";
-
-    phaseEl.textContent =
-        "LIVE";
+    // Client never calculates — only displays server value
+    multiplierEl.textContent = Number(data.multiplier).toFixed(2) + "x";
+    phaseEl.textContent = "LIVE";
 });
-
-
-/*
-==================================================
- ROUND ENDED
-==================================================
-*/
 
 socket.on("round_ended", (data) => {
-
     multiplierEl.classList.remove("running");
-
-    multiplierEl.textContent =
-        Number(data.multiplier).toFixed(2) + "x";
-
-    phaseEl.textContent =
-        "CRASHED";
-
-    predictionEl.innerHTML =
-        `Prediction: <strong>${Number(data.prediction).toFixed(2)}x</strong>`;
-
-    messageEl.textContent =
-        "Round completed.";
-
-    roundIdEl.textContent =
-        `ROUND ${data.roundId}`;
-
+    multiplierEl.textContent = Number(data.multiplier).toFixed(2) + "x";
+    phaseEl.textContent = "CRASHED";
+    predictionEl.textContent = Number(data.prediction).toFixed(2) + "x";
+    messageEl.textContent = "Round completed.";
+    roundIdEl.textContent = `ROUND ${data.roundId}`;
 });
 
-
-/*
-==================================================
- ROUND STATE SYNC
-==================================================
-*/
-
 socket.on("round_state", (data) => {
-
     if (!data || !data.phase) return;
 
-    roundIdEl.textContent =
-        data.roundId
-            ? `ROUND ${data.roundId}`
-            : "NO ACTIVE ROUND";
+    roundIdEl.textContent = data.roundId ? `ROUND ${data.roundId}` : "NO ACTIVE ROUND";
 
     if (data.phase === "idle") {
-
-        phaseEl.textContent =
-            "WAITING";
-
-        multiplierEl.textContent =
-            "1.00x";
-
+        phaseEl.textContent = "WAITING";
+        multiplierEl.textContent = "1.00x";
         countdownEl.textContent = "";
-
         requestBtn.disabled = false;
-
         return;
     }
 
     if (data.phase === "countdown") {
-
-        phaseEl.textContent =
-            "STARTING";
-
-        multiplierEl.textContent =
-            "1.00x";
-
-        if (data.countdown !== undefined) {
-            countdownEl.textContent =
-                data.countdown;
-        }
-
+        phaseEl.textContent = "STARTING";
+        multiplierEl.textContent = "1.00x";
+        if (data.countdown !== undefined) countdownEl.textContent = data.countdown;
         requestBtn.disabled = true;
-
         return;
     }
 
     if (data.phase === "running") {
-
-        phaseEl.textContent =
-            "LIVE";
-
-        multiplierEl.textContent =
-            Number(data.multiplier).toFixed(2) + "x";
-
+        phaseEl.textContent = "LIVE";
+        multiplierEl.textContent = Number(data.multiplier).toFixed(2) + "x";
         requestBtn.disabled = true;
-
         return;
     }
 
     if (data.phase === "ended") {
-
-        phaseEl.textContent =
-            "CRASHED";
-
-        multiplierEl.textContent =
-            Number(data.multiplier).toFixed(2) + "x";
-
+        phaseEl.textContent = "CRASHED";
+        multiplierEl.textContent = Number(data.multiplier).toFixed(2) + "x";
         requestBtn.disabled = true;
-
         if (data.prediction !== undefined) {
-
-            predictionEl.innerHTML =
-                `Prediction: <strong>${Number(data.prediction).toFixed(2)}x</strong>`;
+            predictionEl.textContent = Number(data.prediction).toFixed(2) + "x";
         }
     }
 });
 
-
-/*
-==================================================
- ROUND RESET
-==================================================
-*/
-
 socket.on("round_reset", () => {
-
-    phaseEl.textContent =
-        "WAITING";
-
-    multiplierEl.textContent =
-        "1.00x";
-
+    phaseEl.textContent = "WAITING";
+    multiplierEl.textContent = "1.00x";
     multiplierEl.classList.remove("running");
-
-    predictionEl.textContent =
-        "Prediction: —";
-
+    predictionEl.textContent = "—";
     countdownEl.textContent = "";
-
-    messageEl.textContent =
-        "Ready for the next round.";
-
-    roundIdEl.textContent =
-        "NO ACTIVE ROUND";
-
+    messageEl.textContent = "Ready for the next round.";
+    roundIdEl.textContent = "NO ACTIVE ROUND";
     requestBtn.disabled = false;
 });
-
-
-/*
-==================================================
- ERRORS
-==================================================
-*/
 
 socket.on("prediction_error", (data) => {
-
     requestBtn.disabled = false;
-
-    messageEl.textContent =
-        data?.message || "Prediction request failed.";
+    messageEl.textContent = data?.message || "Signal request failed.";
 });
-
-
 </script>
 
 </body>
