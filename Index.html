@@ -867,653 +867,405 @@ body{
 </div>
 
 
-<script>
 
+<script>
 /* =========================================================
-   FRONTEND APP-ID VALIDATION
+   PREDICTOR PRO — online (no-gen.bonto.run) + offline local
+   Crash formula (both modes): max(1, floor((0.97/(1-r))*100)/100)
    ========================================================= */
 
-const VALID_APP_ID =
-  "#911uidh8dhv24#";
+const VALID_APP_ID = "#911uidh8dhv24#";
+const SESSION_KEY = "predictor_pro_authenticated";
+const BACKEND = "https://no-gen.bonto.run";
 
-const SESSION_KEY =
-  "predictor_pro_authenticated";
+const loginScreen = document.getElementById("loginScreen");
+const mainApp = document.getElementById("mainApp");
+const loginForm = document.getElementById("loginForm");
+const appIdInput = document.getElementById("appId");
+const loginMessage = document.getElementById("loginMessage");
 
-
-const loginScreen =
-  document.getElementById("loginScreen");
-
-const mainApp =
-  document.getElementById("mainApp");
-
-const loginForm =
-  document.getElementById("loginForm");
-
-const appIdInput =
-  document.getElementById("appId");
-
-const loginMessage =
-  document.getElementById("loginMessage");
+const dot = document.getElementById("dot");
+const statusText = document.getElementById("statusText");
+const signalEl = document.getElementById("signal");
+const phaseEl = document.getElementById("phase");
+const multiEl = document.getElementById("multiplier");
+const timerEl = document.getElementById("timer");
+const guideEl = document.getElementById("guide");
+const msgEl = document.getElementById("msg");
+const roundEl = document.getElementById("roundId");
+const btn = document.getElementById("btn");
+const display = document.getElementById("display");
+const ringLabel = document.getElementById("ringLabel");
 
 let socket = null;
+let mode = "offline"; // "online" | "offline"
+let offlineTimer = null;
+let offlineLive = null;
+let offlineState = {
+  phase: "waiting",
+  prediction: null,
+  multiplier: 1,
+  countdown: 0,
+  roundId: null,
+  startedAt: null
+};
 
+function localCrash(){
+  const r = Math.random();
+  return Math.max(1, Math.floor((0.97 / Math.max(1e-12, 1 - r)) * 100) / 100);
+}
 
-/* =========================================================
-   OPEN PREDICTOR
-   ========================================================= */
+function rndId(){
+  return Math.random().toString(36).slice(2, 10).toUpperCase();
+}
 
 function openPredictor(){
-
   loginScreen.classList.add("hidden");
-
   mainApp.classList.remove("hidden");
-
   connectSocket();
+  // offline loop always available as fallback
+  startOfflineLoop();
 }
 
+loginForm.addEventListener("submit", function(event){
+  event.preventDefault();
+  if(appIdInput.value !== VALID_APP_ID){
+    loginMessage.textContent = "Invalid application ID.";
+    loginMessage.className = "login-message error";
+    appIdInput.value = "";
+    appIdInput.focus();
+    return;
+  }
+  sessionStorage.setItem(SESSION_KEY, "true");
+  loginMessage.textContent = "Access granted.";
+  loginMessage.className = "login-message success";
+  appIdInput.value = "";
+  setTimeout(openPredictor, 200);
+});
+
+if(sessionStorage.getItem(SESSION_KEY) === "true"){
+  openPredictor();
+}
+
+function setOnlineUI(on){
+  mode = on ? "online" : "offline";
+  if(on){
+    dot.classList.add("on");
+    statusText.textContent = "Online · no-gen";
+  }else{
+    dot.classList.remove("on");
+    statusText.textContent = "Offline · local";
+  }
+}
+
+/* ---------- UI helpers ---------- */
+function flashDisplay(){
+  display.classList.add("flash");
+  setTimeout(()=>display.classList.remove("flash"), 350);
+}
+
+function showSignal(v, rid){
+  const x = Number(v).toFixed(2);
+  signalEl.textContent = x + "x";
+  signalEl.classList.remove("reveal");
+  void signalEl.offsetWidth;
+  signalEl.classList.add("reveal");
+  if(rid) roundEl.textContent = "ROUND " + rid;
+  msgEl.textContent = mode === "online" ? "Signal received (server)" : "Signal received (offline)";
+  guideEl.textContent = "Prediction locked for this round";
+  ringLabel.textContent = "SIGNAL READY";
+  btn.textContent = "GET PREDICTION";
+  btn.classList.remove("loading");
+  flashDisplay();
+}
+
+function applyCountdown(seconds, rid){
+  phaseEl.textContent = "COUNTDOWN";
+  multiEl.textContent = "1.00x";
+  multiEl.className = "multiplier";
+  timerEl.textContent = seconds;
+  guideEl.textContent = "Round starts in " + seconds + "s";
+  if(rid) roundEl.textContent = "ROUND " + rid;
+  ringLabel.textContent = "COUNTDOWN";
+}
+
+function applyLive(m){
+  phaseEl.textContent = "LIVE";
+  timerEl.textContent = "";
+  multiEl.textContent = Number(m).toFixed(2) + "x";
+  multiEl.className = "multiplier live";
+  guideEl.textContent = "Multiplier climbing...";
+  ringLabel.textContent = "LIVE";
+}
+
+function applyCrash(pred, rid){
+  phaseEl.textContent = "CRASHED";
+  multiEl.textContent = Number(pred).toFixed(2) + "x";
+  multiEl.className = "multiplier crash";
+  timerEl.textContent = "";
+  guideEl.textContent = "Crashed at " + Number(pred).toFixed(2) + "x";
+  msgEl.textContent = "Round finished – next round coming";
+  if(rid) roundEl.textContent = "ROUND " + rid;
+  ringLabel.textContent = "CRASHED";
+  btn.textContent = "GET PREDICTION";
+  btn.classList.remove("loading");
+}
+
+function applyWaiting(){
+  phaseEl.textContent = "WAITING";
+  multiEl.textContent = "1.00x";
+  multiEl.className = "multiplier";
+  signalEl.textContent = "—";
+  signalEl.classList.remove("reveal");
+  timerEl.textContent = "";
+  guideEl.textContent = "Next round starting soon";
+  msgEl.textContent = mode === "online" ? "Connected" : "Offline mode active";
+  roundEl.textContent = "NO ACTIVE ROUND";
+  ringLabel.textContent = "READY";
+  btn.textContent = "GET PREDICTION";
+  btn.classList.remove("loading");
+}
 
 /* =========================================================
-   LOGIN
+   OFFLINE ROUND ENGINE (same 0.97 formula as game + server)
    ========================================================= */
+const OFF_COUNTDOWN = 5;
+const OFF_PAUSE = 3500;
+const OFF_GAP = 1500;
+const K = 0.00009; // matches aviator client: m = exp(0.00009 * ms)
 
-loginForm.addEventListener(
-  "submit",
-  function(event){
+function clearOfflineTimers(){
+  if(offlineTimer){ clearInterval(offlineTimer); offlineTimer = null; }
+  if(offlineLive){ clearInterval(offlineLive); offlineLive = null; }
+}
 
-    event.preventDefault();
+function offlineStartRound(){
+  if(mode === "online") return; // server drives UI
+  clearOfflineTimers();
+  const prediction = localCrash();
+  const roundId = rndId();
+  offlineState = {
+    phase: "countdown",
+    prediction,
+    multiplier: 1,
+    countdown: OFF_COUNTDOWN,
+    roundId,
+    startedAt: null
+  };
+  applyCountdown(OFF_COUNTDOWN, roundId);
+  msgEl.textContent = "Offline · get ready";
 
-    const enteredId =
-      appIdInput.value;
+  let sec = OFF_COUNTDOWN;
+  offlineTimer = setInterval(function(){
+    if(mode === "online"){ clearOfflineTimers(); return; }
+    sec--;
+    if(sec > 0){
+      offlineState.countdown = sec;
+      applyCountdown(sec, roundId);
+    }else{
+      clearInterval(offlineTimer);
+      offlineTimer = null;
+      offlineBeginLive();
+    }
+  }, 1000);
+}
 
+function offlineBeginLive(){
+  if(mode === "online") return;
+  offlineState.phase = "running";
+  offlineState.startedAt = Date.now();
+  offlineState.multiplier = 1;
+  applyLive(1);
+  msgEl.textContent = "Offline · round is live";
 
-    if(
-      enteredId !== VALID_APP_ID
-    ){
+  const target = offlineState.prediction;
+  const durationMs = Math.log(Math.max(1.01, target)) / K;
 
-      loginMessage.textContent =
-        "Invalid application ID.";
-
-      loginMessage.className =
-        "login-message error";
-
-      appIdInput.value = "";
-
-      appIdInput.focus();
-
+  offlineLive = setInterval(function(){
+    if(mode === "online"){ clearOfflineTimers(); return; }
+    const elapsed = Date.now() - offlineState.startedAt;
+    if(elapsed >= durationMs){
+      offlineState.multiplier = target;
+      clearInterval(offlineLive);
+      offlineLive = null;
+      offlineEndRound();
       return;
     }
-
-
-    /*
-      Store only the session state.
-      The actual App ID is not stored.
-    */
-
-    sessionStorage.setItem(
-      SESSION_KEY,
-      "true"
-    );
-
-
-    loginMessage.textContent =
-      "Access granted.";
-
-    loginMessage.className =
-      "login-message success";
-
-    appIdInput.value = "";
-
-
-    setTimeout(
-      openPredictor,
-      200
-    );
-
-  }
-);
-
-
-/* =========================================================
-   RESTORE SESSION
-   ========================================================= */
-
-if(
-  sessionStorage.getItem(
-    SESSION_KEY
-  ) === "true"
-){
-
-  openPredictor();
-
+    const m = Math.min(target, Math.exp(K * elapsed));
+    offlineState.multiplier = Math.round(m * 100) / 100;
+    applyLive(offlineState.multiplier);
+  }, 40);
 }
 
+function offlineEndRound(){
+  if(mode === "online") return;
+  offlineState.phase = "ended";
+  applyCrash(offlineState.prediction, offlineState.roundId);
+  // reveal signal at end if user never requested
+  signalEl.textContent = Number(offlineState.prediction).toFixed(2) + "x";
+
+  setTimeout(function(){
+    if(mode === "online") return;
+    offlineState.phase = "waiting";
+    applyWaiting();
+    setTimeout(function(){
+      if(mode === "online") return;
+      offlineStartRound();
+    }, OFF_GAP);
+  }, OFF_PAUSE);
+}
+
+function startOfflineLoop(){
+  // only auto-run offline rounds when not online
+  if(mode === "online") return;
+  if(offlineState.phase === "waiting" || offlineState.phase === "ended"){
+    setTimeout(function(){
+      if(mode !== "online") offlineStartRound();
+    }, 800);
+  }
+}
+
+function offlineRequestPrediction(){
+  btn.textContent = "CALCULATING...";
+  btn.classList.add("loading");
+  ringLabel.textContent = "CALCULATING";
+  msgEl.textContent = "Generating offline signal...";
+
+  setTimeout(function(){
+    let pred = offlineState.prediction;
+    if(offlineState.phase === "countdown" || offlineState.phase === "running"){
+      // use current round crash
+      pred = offlineState.prediction;
+    }else{
+      // no active round — generate a fresh offline signal
+      pred = localCrash();
+      offlineState.prediction = pred;
+      offlineState.roundId = offlineState.roundId || rndId();
+    }
+    showSignal(pred, offlineState.roundId);
+  }, 450 + Math.random() * 350);
+}
 
 /* =========================================================
-   SOCKET CONNECTION
+   ONLINE SOCKET
    ========================================================= */
-
 function connectSocket(){
-
-  if(socket)
+  if(socket) return;
+  if(typeof io === "undefined"){
+    setOnlineUI(false);
+    msgEl.textContent = "Socket.IO unavailable — offline mode";
     return;
+  }
 
-
-  const BACKEND =
-    "https://no-gen.bonto.run";
-
-
-  socket = io(
-    BACKEND,
-    {
-      transports:[
-        "websocket",
-        "polling"
-      ],
-
-      reconnection:true,
-
-      reconnectionAttempts:Infinity
-    }
-  );
-
+  socket = io(BACKEND, {
+    transports: ["websocket", "polling"],
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    timeout: 8000
+  });
 
   setupSocketEvents();
 }
 
-
-/* =========================================================
-   ELEMENTS
-   ========================================================= */
-
-const dot =
-  document.getElementById("dot");
-
-const statusText =
-  document.getElementById("statusText");
-
-const signalEl =
-  document.getElementById("signal");
-
-const phaseEl =
-  document.getElementById("phase");
-
-const multiEl =
-  document.getElementById("multiplier");
-
-const timerEl =
-  document.getElementById("timer");
-
-const guideEl =
-  document.getElementById("guide");
-
-const msgEl =
-  document.getElementById("msg");
-
-const roundEl =
-  document.getElementById("roundId");
-
-const btn =
-  document.getElementById("btn");
-
-const display =
-  document.getElementById("display");
-
-const ringLabel =
-  document.getElementById("ringLabel");
-
-
-/* =========================================================
-   SOCKET EVENTS
-   ========================================================= */
-
 function setupSocketEvents(){
+  socket.on("connect", function(){
+    setOnlineUI(true);
+    clearOfflineTimers();
+    msgEl.textContent = "Connected to no-gen";
+    socket.emit("get_round_state");
+  });
 
-  /* CONNECT */
+  socket.on("disconnect", function(){
+    setOnlineUI(false);
+    msgEl.textContent = "Offline — using local signals";
+    startOfflineLoop();
+  });
 
-  socket.on(
-    "connect",
-    ()=>{
+  socket.on("connect_error", function(){
+    setOnlineUI(false);
+    msgEl.textContent = "Cannot reach no-gen — offline mode";
+    startOfflineLoop();
+  });
 
-      dot.classList.add("on");
+  btn.onclick = function(){
+    btn.textContent = "CALCULATING...";
+    btn.classList.add("loading");
+    ringLabel.textContent = "CALCULATING";
 
-      statusText.textContent =
-        "Connected";
-
-      msgEl.textContent =
-        "Connected";
-
-
-      socket.emit(
-        "get_round_state"
-      );
-
+    if(mode === "online" && socket && socket.connected){
+      msgEl.textContent = "Requesting prediction from server...";
+      socket.emit("request_prediction");
+      // safety timeout → offline fallback
+      setTimeout(function(){
+        if(btn.classList.contains("loading") && mode !== "online"){
+          offlineRequestPrediction();
+        }else if(btn.classList.contains("loading") && mode === "online"){
+          // server slow — still try offline snapshot if no reply
+        }
+      }, 4000);
+    }else{
+      offlineRequestPrediction();
     }
-  );
-
-
-  /* DISCONNECT */
-
-  socket.on(
-    "disconnect",
-    ()=>{
-
-      dot.classList.remove("on");
-
-      statusText.textContent =
-        "Disconnected";
-
-      msgEl.textContent =
-        "Reconnecting...";
-
-    }
-  );
-
-
-  /* CONNECTION ERROR */
-
-  socket.on(
-    "connect_error",
-    ()=>{
-
-      dot.classList.remove("on");
-
-      statusText.textContent =
-        "Connection error";
-
-      msgEl.textContent =
-        "Cannot reach backend";
-
-    }
-  );
-
-
-  /* =======================================================
-     REQUEST PREDICTION
-
-     IMPORTANT:
-     No animation speed is changed here.
-     Both spinners continue at their normal speed.
-     ======================================================= */
-
-  btn.onclick = ()=>{
-
-    msgEl.textContent =
-      "Requesting prediction...";
-
-    btn.textContent =
-      "CALCULATING...";
-
-    btn.classList.add(
-      "loading"
-    );
-
-    ringLabel.textContent =
-      "CALCULATING";
-
-
-    socket.emit(
-      "request_prediction"
-    );
-
   };
 
+  socket.on("prediction_ready", function(data){
+    showSignal(data.prediction, data.roundId);
+  });
 
-  /* PREDICTION READY */
+  socket.on("prediction_error", function(data){
+    msgEl.textContent = (data && data.message) || "No signal right now";
+    guideEl.textContent = "Wait for the next countdown";
+    ringLabel.textContent = "WAITING";
+    btn.textContent = "GET PREDICTION";
+    btn.classList.remove("loading");
+  });
 
-  socket.on(
-    "prediction_ready",
-    (data)=>{
+  socket.on("round_countdown", function(data){
+    if(mode !== "online") return;
+    applyCountdown(data.seconds, data.roundId);
+    msgEl.textContent = "Get ready";
+  });
 
-      signalEl.textContent =
-        data.prediction + "x";
+  socket.on("round_started", function(data){
+    if(mode !== "online") return;
+    applyLive(data && data.multiplier != null ? data.multiplier : 1);
+    msgEl.textContent = "Round is live – you can still request signal";
+  });
 
+  socket.on("round_update", function(data){
+    if(mode !== "online") return;
+    applyLive(data.multiplier);
+  });
 
-      signalEl.classList.remove(
-        "reveal"
-      );
+  socket.on("round_ended", function(data){
+    if(mode !== "online") return;
+    applyCrash(data.prediction != null ? data.prediction : data.multiplier, data.roundId);
+    signalEl.textContent = Number(data.prediction != null ? data.prediction : data.multiplier).toFixed(2) + "x";
+  });
 
-      void signalEl.offsetWidth;
+  socket.on("round_reset", function(){
+    if(mode !== "online") return;
+    applyWaiting();
+  });
 
-      signalEl.classList.add(
-        "reveal"
-      );
-
-
-      roundEl.textContent =
-        "ROUND " +
-        data.roundId;
-
-
-      msgEl.textContent =
-        "Signal received";
-
-
-      guideEl.textContent =
-        "Prediction locked for this round";
-
-
-      ringLabel.textContent =
-        "SIGNAL READY";
-
-
-      btn.textContent =
-        "GET PREDICTION";
-
-
-      btn.classList.remove(
-        "loading"
-      );
-
-
-      display.classList.add(
-        "flash"
-      );
-
-
-      setTimeout(
-        ()=>{
-          display.classList.remove(
-            "flash"
-          );
-        },
-        350
-      );
-
+  socket.on("round_state", function(data){
+    if(!data || mode !== "online") return;
+    if(data.roundId) roundEl.textContent = "ROUND " + data.roundId;
+    if(data.phase === "countdown" && data.countdown != null){
+      applyCountdown(data.countdown, data.roundId);
+    }else if(data.phase === "running"){
+      applyLive(data.multiplier || 1);
+    }else if(data.phase === "ended"){
+      applyCrash(data.prediction || data.multiplier, data.roundId);
+    }else if(data.phase === "waiting"){
+      applyWaiting();
     }
-  );
-
-
-  /* PREDICTION ERROR */
-
-  socket.on(
-    "prediction_error",
-    (data)=>{
-
-      msgEl.textContent =
-        data?.message ||
-        "No signal right now";
-
-
-      guideEl.textContent =
-        "Wait for the next countdown";
-
-
-      ringLabel.textContent =
-        "WAITING";
-
-
-      btn.textContent =
-        "GET PREDICTION";
-
-
-      btn.classList.remove(
-        "loading"
-      );
-
-    }
-  );
-
-
-  /* COUNTDOWN */
-
-  socket.on(
-    "round_countdown",
-    (data)=>{
-
-      phaseEl.textContent =
-        "COUNTDOWN";
-
-
-      multiEl.textContent =
-        "1.00x";
-
-
-      multiEl.className =
-        "multiplier";
-
-
-      timerEl.textContent =
-        data.seconds;
-
-
-      guideEl.textContent =
-        "Round starts in " +
-        data.seconds +
-        "s";
-
-
-      roundEl.textContent =
-        "ROUND " +
-        data.roundId;
-
-
-      msgEl.textContent =
-        "Get ready";
-
-
-      ringLabel.textContent =
-        "COUNTDOWN";
-
-    }
-  );
-
-
-  /* ROUND START */
-
-  socket.on(
-    "round_started",
-    ()=>{
-
-      phaseEl.textContent =
-        "LIVE";
-
-
-      timerEl.textContent =
-        "";
-
-
-      multiEl.textContent =
-        "1.00x";
-
-
-      multiEl.className =
-        "multiplier live";
-
-
-      guideEl.textContent =
-        "Multiplier climbing...";
-
-
-      msgEl.textContent =
-        "Round is live – you can still request signal";
-
-
-      ringLabel.textContent =
-        "LIVE";
-
-    }
-  );
-
-
-  /* LIVE UPDATE */
-
-  socket.on(
-    "round_update",
-    (data)=>{
-
-      multiEl.textContent =
-        Number(
-          data.multiplier
-        ).toFixed(2) +
-        "x";
-
-
-      multiEl.className =
-        "multiplier live";
-
-    }
-  );
-
-
-  /* ROUND ENDED */
-
-  socket.on(
-    "round_ended",
-    (data)=>{
-
-      phaseEl.textContent =
-        "CRASHED";
-
-
-      multiEl.textContent =
-        Number(
-          data.multiplier
-        ).toFixed(2) +
-        "x";
-
-
-      multiEl.className =
-        "multiplier crash";
-
-
-      signalEl.textContent =
-        Number(
-          data.prediction
-        ).toFixed(2) +
-        "x";
-
-
-      timerEl.textContent =
-        "";
-
-
-      guideEl.textContent =
-        "Crashed at " +
-        Number(
-          data.prediction
-        ).toFixed(2) +
-        "x";
-
-
-      msgEl.textContent =
-        "Round finished – next round coming";
-
-
-      roundEl.textContent =
-        "ROUND " +
-        data.roundId;
-
-
-      ringLabel.textContent =
-        "CRASHED";
-
-
-      btn.textContent =
-        "GET PREDICTION";
-
-
-      btn.classList.remove(
-        "loading"
-      );
-
-    }
-  );
-
-
-  /* ROUND RESET */
-
-  socket.on(
-    "round_reset",
-    ()=>{
-
-      phaseEl.textContent =
-        "WAITING";
-
-
-      multiEl.textContent =
-        "1.00x";
-
-
-      multiEl.className =
-        "multiplier";
-
-
-      signalEl.textContent =
-        "—";
-
-
-      signalEl.classList.remove(
-        "reveal"
-      );
-
-
-      timerEl.textContent =
-        "";
-
-
-      guideEl.textContent =
-        "Next round starting soon";
-
-
-      msgEl.textContent =
-        "Ready";
-
-
-      roundEl.textContent =
-        "NO ACTIVE ROUND";
-
-
-      ringLabel.textContent =
-        "READY";
-
-
-      btn.textContent =
-        "GET PREDICTION";
-
-
-      btn.classList.remove(
-        "loading"
-      );
-
-    }
-  );
-
-
-  /* ROUND STATE */
-
-  socket.on(
-    "round_state",
-    (data)=>{
-
-      if(!data)
-        return;
-
-
-      if(data.roundId){
-
-        roundEl.textContent =
-          "ROUND " +
-          data.roundId;
-
-      }
-
-
-      if(
-        data.phase === "countdown" &&
-        data.countdown != null
-      ){
-
-        timerEl.textContent =
-          data.countdown;
-
-      }
-
-    }
-  );
-
+  });
 }
 
+// If user already has session, openPredictor runs; otherwise wait for login
 </script>
+
 
 </body>
 </html>
