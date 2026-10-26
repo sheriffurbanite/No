@@ -3,880 +3,250 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Predictor Pro</title>
-
-<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
-
+<title>Shika Predictor</title>
 <style>
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
-}
-
+*{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#030405;
-  --panel:#0b0e11;
-  --line:#22292f;
-  --muted:#737c83;
-  --green:#35ff91;
-  --red:#ff4053;
-  --yellow:#ffc857;
+  --bg:#030405;--panel:#0b0e11;--line:#22292f;--muted:#737c83;
+  --green:#35ff91;--red:#ff4053;--yellow:#ffc857;
 }
-
 body{
-  min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  padding:16px;
-  color:#fff;
+  min-height:100vh;display:flex;justify-content:center;align-items:center;
+  padding:16px;color:#fff;
   font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  background:
-    radial-gradient(circle at 50% -10%,#19251f 0,#090b0d 42%,#020304 100%);
+  background:radial-gradient(circle at 50% -10%,#19251f 0,#090b0d 42%,#020304 100%);
 }
+.hidden{display:none!important}
+.app{width:min(430px,100%)}
 
-.hidden{
-  display:none!important;
-}
-
-.app{
-  width:min(430px,100%);
-}
-
-/* ================= LOGIN ================= */
-
+/* LOGIN */
 .login-card{
-  width:100%;
-  padding:26px 20px 22px;
-  border:1px solid #252c31;
-  border-radius:28px;
+  width:100%;padding:26px 20px 22px;border:1px solid #252c31;border-radius:28px;
   background:linear-gradient(145deg,#121619,#07090b);
-  box-shadow:
-    0 35px 100px rgba(0,0,0,.8),
-    inset 0 1px rgba(255,255,255,.045);
+  box-shadow:0 35px 100px rgba(0,0,0,.8),inset 0 1px rgba(255,255,255,.045);
   text-align:center;
 }
-
 .login-logo{
-  width:88px;
-  height:88px;
-  object-fit:contain;
-  display:block;
-  margin:0 auto 16px;
-  border-radius:18px;
-  background:#fff;
+  width:88px;height:88px;object-fit:contain;display:block;margin:0 auto 16px;
+  border-radius:18px;background:#fff;
 }
-
-.login-title{
-  font-size:25px;
-  font-weight:950;
-  letter-spacing:1.5px;
-}
-
-.login-subtitle{
-  margin-top:5px;
-  color:#737b82;
-  font-size:9px;
-  letter-spacing:2.5px;
-  text-transform:uppercase;
-}
-
-.login-form{
-  margin-top:28px;
-}
-
+.login-title{font-size:25px;font-weight:950;letter-spacing:1.5px}
+.login-subtitle{margin-top:5px;color:#737b82;font-size:9px;letter-spacing:2.5px;text-transform:uppercase}
+.login-form{margin-top:28px}
 .login-label{
-  display:block;
-  margin-bottom:8px;
-  text-align:left;
-  color:#747d84;
-  font-size:9px;
-  font-weight:850;
-  letter-spacing:2px;
+  display:block;margin-bottom:8px;text-align:left;color:#747d84;
+  font-size:9px;font-weight:850;letter-spacing:2px;
 }
-
 .app-id-input{
-  width:100%;
-  height:56px;
-  padding:0 17px;
-  border:1px solid #293136;
-  border-radius:16px;
-  outline:none;
-  color:white;
-  background:#080b0d;
-  font-size:16px;
-  letter-spacing:4px;
-  text-align:center;
-  transition:.2s;
-  -webkit-text-security:disc;
+  width:100%;height:56px;padding:0 17px;border:1px solid #293136;border-radius:16px;
+  outline:none;color:white;background:#080b0d;font-size:16px;letter-spacing:4px;
+  text-align:center;transition:.2s;-webkit-text-security:disc;
 }
-
 .app-id-input:focus{
   border-color:rgba(53,255,145,.65);
-  box-shadow:
-    0 0 0 3px rgba(53,255,145,.07),
-    0 0 25px rgba(53,255,145,.08);
+  box-shadow:0 0 0 3px rgba(53,255,145,.07),0 0 25px rgba(53,255,145,.08);
 }
-
 .login-button{
-  width:100%;
-  height:55px;
-  margin-top:12px;
-  border:0;
-  border-radius:17px;
-  cursor:pointer;
-  color:#030504;
-  background:linear-gradient(180deg,#f8fff9,#cffff0);
-  font-size:14px;
-  font-weight:950;
-  box-shadow:
-    0 8px 28px rgba(53,255,145,.12),
-    inset 0 1px rgba(255,255,255,.9);
+  width:100%;height:55px;margin-top:12px;border:0;border-radius:17px;cursor:pointer;
+  color:#030504;background:linear-gradient(180deg,#f8fff9,#cffff0);
+  font-size:14px;font-weight:950;
+  box-shadow:0 8px 28px rgba(53,255,145,.12),inset 0 1px rgba(255,255,255,.9);
 }
+.login-button:active{transform:scale(.985)}
+.login-message{min-height:18px;margin-top:11px;color:#747d84;font-size:11px}
+.login-message.error{color:#ff5969}
+.login-message.success{color:var(--green)}
 
-.login-button:active{
-  transform:scale(.985);
-}
-
-.login-message{
-  min-height:18px;
-  margin-top:11px;
-  color:#747d84;
-  font-size:11px;
-}
-
-.login-message.error{
-  color:#ff5969;
-}
-
-.login-message.success{
-  color:var(--green);
-}
-
-/* ================= MAIN ================= */
-
+/* MAIN */
 .main-app{
-  width:100%;
-  padding:15px;
-  border:1px solid #252b30;
-  border-radius:28px;
+  width:100%;padding:15px;border:1px solid #252b30;border-radius:28px;
   background:rgba(9,11,13,.96);
-  box-shadow:
-    0 30px 90px rgba(0,0,0,.75),
-    inset 0 1px rgba(255,255,255,.04);
+  box-shadow:0 30px 90px rgba(0,0,0,.75),inset 0 1px rgba(255,255,255,.04);
 }
+.header{display:flex;justify-content:space-between;align-items:center;padding:2px 4px 13px}
+.brand{display:flex;align-items:center;gap:9px}
+.brand-logo{width:36px;height:36px;object-fit:contain;border-radius:9px;background:#fff}
+.logo{font-size:18px;font-weight:950;letter-spacing:1.6px}
+.logo small{display:block;margin-top:-1px;color:#697177;font-size:8px;letter-spacing:2.5px}
+.status{display:flex;align-items:center;gap:7px;color:#858d94;font-size:10px}
+.dot{width:7px;height:7px;border-radius:50%;background:#555}
+.dot.on{background:#35ee8a;box-shadow:0 0 12px #35ee8a}
 
-/* ================= HEADER ================= */
-
-.header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:2px 4px 13px;
-}
-
-.brand{
-  display:flex;
-  align-items:center;
-  gap:9px;
-}
-
-.brand-logo{
-  width:36px;
-  height:36px;
-  object-fit:contain;
-  border-radius:9px;
-  background:#fff;
-}
-
-.logo{
-  font-size:18px;
-  font-weight:950;
-  letter-spacing:1.6px;
-}
-
-.logo small{
-  display:block;
-  margin-top:-1px;
-  color:#697177;
-  font-size:8px;
-  letter-spacing:2.5px;
-}
-
-.status{
-  display:flex;
-  align-items:center;
-  gap:7px;
-  color:#858d94;
-  font-size:10px;
-}
-
-.dot{
-  width:7px;
-  height:7px;
-  border-radius:50%;
-  background:#555;
-}
-
-.dot.on{
-  background:#35ee8a;
-  box-shadow:0 0 12px #35ee8a;
-}
-
-/* ================= SIGNAL ================= */
-
+/* SIGNAL */
 .signal-box{
-  position:relative;
-  overflow:hidden;
-  padding:13px 16px;
-  margin-bottom:11px;
-  border:1px solid #20272c;
-  border-radius:18px;
+  position:relative;overflow:hidden;padding:13px 16px;margin-bottom:11px;
+  border:1px solid #20272c;border-radius:18px;
   background:linear-gradient(145deg,#111519,#090b0d);
 }
+.signal-label{font-size:8px;letter-spacing:2.5px;color:#707980;font-weight:850}
+.signal-value{font-size:27px;font-weight:950;letter-spacing:-1px;transition:.25s}
+.signal-value.reveal{color:var(--green);text-shadow:0 0 18px rgba(53,255,145,.45)}
 
-.signal-label{
-  font-size:8px;
-  letter-spacing:2.5px;
-  color:#707980;
-  font-weight:850;
-}
-
-.signal-value{
-  font-size:27px;
-  font-weight:950;
-  letter-spacing:-1px;
-  transition:.25s;
-}
-
-.signal-value.reveal{
-  color:var(--green);
-  text-shadow:0 0 18px rgba(53,255,145,.45);
-}
-
-/* ================= DISPLAY ================= */
-
+/* DISPLAY */
 .display{
-  position:relative;
-  height:335px;
-  overflow:hidden;
-  border:1px solid #242a2f;
-  border-radius:23px;
-  background:
-    radial-gradient(
-      circle at 50% 48%,
-      #151b1f 0,
-      #0b0f12 48%,
-      #07090b 100%
-    );
+  position:relative;height:335px;overflow:hidden;border:1px solid #242a2f;border-radius:23px;
+  background:radial-gradient(circle at 50% 48%,#151b1f 0,#0b0f12 48%,#07090b 100%);
 }
-
 .display:before{
-  content:"";
-  position:absolute;
-  inset:0;
-  opacity:.14;
-
+  content:"";position:absolute;inset:0;opacity:.14;
   background-image:
-    linear-gradient(
-      rgba(255,255,255,.035) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      90deg,
-      rgba(255,255,255,.035) 1px,
-      transparent 1px
-    );
-
+    linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
   background-size:32px 32px;
 }
-
 .guide{
-  position:absolute;
-  z-index:5;
-  top:14px;
-  left:20px;
-  right:20px;
-  text-align:center;
-  color:#565f66;
-  font-size:8px;
-  letter-spacing:1.7px;
-  text-transform:uppercase;
+  position:absolute;z-index:5;top:14px;left:20px;right:20px;text-align:center;
+  color:#565f66;font-size:8px;letter-spacing:1.7px;text-transform:uppercase;
 }
-
-/* ================= SPINNERS ================= */
-
 .spinner{
-  position:absolute;
-  left:50%;
-  top:51%;
-  width:224px;
-  height:224px;
-  transform:translate(-50%,-50%);
-  border-radius:50%;
-  pointer-events:none;
+  position:absolute;left:50%;top:51%;width:224px;height:224px;
+  transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
 }
-
-/* OUTER — continuous 8 second rotation */
-
 .outer-ring{
-  position:absolute;
-  inset:0;
-  border-radius:50%;
-
-  background:
-    conic-gradient(
-      from -45deg,
-      transparent 0 14deg,
-      rgba(255,64,83,.18) 15deg,
-      var(--red) 44deg,
-      rgba(255,64,83,.12) 72deg,
-      transparent 73deg 103deg,
-      rgba(53,255,145,.12) 104deg,
-      var(--green) 145deg,
-      rgba(53,255,145,.08) 200deg,
-      transparent 201deg 360deg
-    );
-
-  -webkit-mask:
-    radial-gradient(
-      farthest-side,
-      transparent calc(100% - 9px),
-      #000 calc(100% - 8px)
-    );
-
-  mask:
-    radial-gradient(
-      farthest-side,
-      transparent calc(100% - 9px),
-      #000 calc(100% - 8px)
-    );
-
-  filter:drop-shadow(
-    0 0 8px rgba(53,255,145,.28)
-  );
-
+  position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(
+    from -45deg,transparent 0 14deg,rgba(255,64,83,.18) 15deg,var(--red) 44deg,
+    rgba(255,64,83,.12) 72deg,transparent 73deg 103deg,rgba(53,255,145,.12) 104deg,
+    var(--green) 145deg,rgba(53,255,145,.08) 200deg,transparent 201deg 360deg);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 9px),#000 calc(100% - 8px));
+  mask:radial-gradient(farthest-side,transparent calc(100% - 9px),#000 calc(100% - 8px));
+  filter:drop-shadow(0 0 8px rgba(53,255,145,.28));
   animation:outerSpin 8s linear infinite;
 }
-
-@keyframes outerSpin{
-  to{
-    transform:rotate(360deg);
-  }
-}
-
-/* INNER — exactly 3× faster */
-
+@keyframes outerSpin{to{transform:rotate(360deg)}}
 .inner-ring{
-  position:absolute;
-  inset:24px;
-  border-radius:50%;
-
-  background:
-    conic-gradient(
-      from 30deg,
-      transparent 0 20deg,
-      rgba(53,255,145,.08) 21deg,
-      var(--green) 57deg,
-      rgba(53,255,145,.1) 87deg,
-      transparent 88deg 205deg,
-      rgba(255,64,83,.1) 206deg,
-      var(--red) 237deg,
-      rgba(255,64,83,.05) 264deg,
-      transparent 265deg 360deg
-    );
-
-  -webkit-mask:
-    radial-gradient(
-      farthest-side,
-      transparent calc(100% - 6px),
-      #000 calc(100% - 5px)
-    );
-
-  mask:
-    radial-gradient(
-      farthest-side,
-      transparent calc(100% - 6px),
-      #000 calc(100% - 5px)
-    );
-
-  filter:drop-shadow(
-    0 0 7px rgba(53,255,145,.35)
-  );
-
+  position:absolute;inset:24px;border-radius:50%;
+  background:conic-gradient(
+    from 30deg,transparent 0 20deg,rgba(53,255,145,.08) 21deg,var(--green) 57deg,
+    rgba(53,255,145,.1) 87deg,transparent 88deg 205deg,rgba(255,64,83,.1) 206deg,
+    var(--red) 237deg,rgba(255,64,83,.05) 264deg,transparent 265deg 360deg);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 6px),#000 calc(100% - 5px));
+  mask:radial-gradient(farthest-side,transparent calc(100% - 6px),#000 calc(100% - 5px));
+  filter:drop-shadow(0 0 7px rgba(53,255,145,.35));
   animation:innerSpin 2.6666667s linear infinite;
 }
-
-@keyframes innerSpin{
-  to{
-    transform:rotate(-360deg);
-  }
-}
-
-/* OUTER LIGHT */
-
+@keyframes innerSpin{to{transform:rotate(-360deg)}}
 .light-point{
-  position:absolute;
-  left:50%;
-  top:2px;
-  width:12px;
-  height:12px;
-  transform:translateX(-50%);
-  border-radius:50%;
-  background:#fff;
-
-  box-shadow:
-    0 0 7px #fff,
-    0 0 18px var(--green),
-    0 0 30px rgba(53,255,145,.75);
-
+  position:absolute;left:50%;top:2px;width:12px;height:12px;transform:translateX(-50%);
+  border-radius:50%;background:#fff;
+  box-shadow:0 0 7px #fff,0 0 18px var(--green),0 0 30px rgba(53,255,145,.75);
   animation:pointSpin 8s linear infinite;
 }
-
-@keyframes pointSpin{
-  to{
-    transform:
-      translateX(-50%)
-      rotate(360deg);
-  }
-}
-
-/* INNER LIGHT */
-
+@keyframes pointSpin{to{transform:translateX(-50%) rotate(360deg)}}
 .inner-point{
-  position:absolute;
-  left:50%;
-  top:26px;
-  width:8px;
-  height:8px;
-  transform:translateX(-50%);
-  border-radius:50%;
-  background:#dffff0;
-
-  box-shadow:
-    0 0 6px #fff,
-    0 0 15px var(--green);
-
+  position:absolute;left:50%;top:26px;width:8px;height:8px;transform:translateX(-50%);
+  border-radius:50%;background:#dffff0;
+  box-shadow:0 0 6px #fff,0 0 15px var(--green);
   animation:innerPoint 2.6666667s linear infinite;
 }
-
-@keyframes innerPoint{
-  to{
-    transform:
-      translateX(-50%)
-      rotate(-360deg);
-  }
-}
-
-/* ================= CORE ================= */
-
+@keyframes innerPoint{to{transform:translateX(-50%) rotate(-360deg)}}
 .core{
-  position:absolute;
-  inset:47px;
-  z-index:3;
-
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-
-  border-radius:50%;
-  border:1px solid #293136;
-
-  background:
-    radial-gradient(
-      circle,
-      #151a1e,
-      #080b0d 73%
-    );
-
-  box-shadow:
-    inset 0 0 35px rgba(0,0,0,.85),
-    0 0 30px rgba(0,0,0,.5);
+  position:absolute;inset:47px;z-index:3;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;border-radius:50%;border:1px solid #293136;
+  background:radial-gradient(circle,#151a1e,#080b0d 73%);
+  box-shadow:inset 0 0 35px rgba(0,0,0,.85),0 0 30px rgba(0,0,0,.5);
 }
-
-.phase{
-  color:#737b82;
-  font-size:8px;
-  font-weight:900;
-  letter-spacing:3px;
-}
-
-.multiplier{
-  margin-top:5px;
-  font-size:38px;
-  line-height:1;
-  font-weight:950;
-  letter-spacing:-2px;
-}
-
-.multiplier.live{
-  color:var(--green);
-  text-shadow:0 0 20px rgba(53,255,145,.3);
-}
-
-.multiplier.crash{
-  color:var(--red);
-  text-shadow:0 0 20px rgba(255,64,83,.3);
-}
-
-.timer{
-  min-height:22px;
-  margin-top:7px;
-  color:var(--yellow);
-  font-size:17px;
-  font-weight:850;
-}
-
+.phase{color:#737b82;font-size:8px;font-weight:900;letter-spacing:3px}
+.multiplier{margin-top:5px;font-size:38px;line-height:1;font-weight:950;letter-spacing:-2px}
+.multiplier.live{color:var(--green);text-shadow:0 0 20px rgba(53,255,145,.3)}
+.multiplier.crash{color:var(--red);text-shadow:0 0 20px rgba(255,64,83,.3)}
+.timer{min-height:22px;margin-top:7px;color:var(--yellow);font-size:17px;font-weight:850}
 .ring-label{
-  position:absolute;
-  z-index:5;
-  left:50%;
-  bottom:17px;
-  transform:translateX(-50%);
-  color:#555e65;
-  font-size:8px;
-  letter-spacing:2px;
-  white-space:nowrap;
+  position:absolute;z-index:5;left:50%;bottom:17px;transform:translateX(-50%);
+  color:#555e65;font-size:8px;letter-spacing:2px;white-space:nowrap;
 }
-
 .display.flash:after{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:rgba(53,255,145,.12);
-  animation:flash .35s ease-out forwards;
-  pointer-events:none;
+  content:"";position:absolute;inset:0;background:rgba(53,255,145,.12);
+  animation:flash .35s ease-out forwards;pointer-events:none;
 }
-
-@keyframes flash{
-  from{opacity:1}
-  to{opacity:0}
-}
-
-/* ================= BUTTON ================= */
+@keyframes flash{from{opacity:1}to{opacity:0}}
 
 .predict-button{
-  width:100%;
-  height:55px;
-  margin-top:12px;
-
-  border:1px solid rgba(255,255,255,.15);
-  border-radius:17px;
-
-  cursor:pointer;
-
-  color:#030504;
-
-  background:
-    linear-gradient(
-      180deg,
-      #f8fff9,
-      #cffff0
-    );
-
-  font-size:14px;
-  font-weight:950;
-  letter-spacing:.5px;
-
-  box-shadow:
-    0 7px 25px rgba(53,255,145,.12),
-    inset 0 1px rgba(255,255,255,.9);
-
+  width:100%;height:55px;margin-top:12px;border:1px solid rgba(255,255,255,.15);
+  border-radius:17px;cursor:pointer;color:#030504;
+  background:linear-gradient(180deg,#f8fff9,#cffff0);
+  font-size:14px;font-weight:950;letter-spacing:.5px;
+  box-shadow:0 7px 25px rgba(53,255,145,.12),inset 0 1px rgba(255,255,255,.9);
   transition:.15s;
 }
-
-.predict-button:active{
-  transform:scale(.985);
-}
-
-.predict-button.loading{
-  background:
-    linear-gradient(
-      180deg,
-      #dfffee,
-      #a9f6d0
-    );
-}
-
-.message{
-  min-height:18px;
-  margin-top:10px;
-  text-align:center;
-  color:#747d84;
-  font-size:11px;
-}
-
-.round-id{
-  margin-top:5px;
-  text-align:center;
-  color:#444b50;
-  font-size:9px;
-  letter-spacing:1.5px;
-}
-
-/* ================= MOBILE ================= */
+.predict-button:active{transform:scale(.985)}
+.predict-button.loading{background:linear-gradient(180deg,#dfffee,#a9f6d0)}
+.message{min-height:18px;margin-top:10px;text-align:center;color:#747d84;font-size:11px}
+.round-id{margin-top:5px;text-align:center;color:#444b50;font-size:9px;letter-spacing:1.5px}
 
 @media(max-height:700px){
-
-  .display{
-    height:290px;
-  }
-
-  .spinner{
-    width:190px;
-    height:190px;
-  }
-
-  .core{
-    inset:40px;
-  }
-
-  .inner-ring{
-    inset:20px;
-  }
-
-  .inner-point{
-    top:22px;
-  }
+  .display{height:290px}
+  .spinner{width:190px;height:190px}
+  .core{inset:40px}
+  .inner-ring{inset:20px}
+  .inner-point{top:22px}
 }
 </style>
 </head>
-
 <body>
-
 <div class="app">
 
-  <!-- ================= LOGIN ================= -->
-
-  <section
-    class="login-card"
-    id="loginScreen"
-  >
-
-    <img
-      class="login-logo"
-      src="https://i.ibb.co/8gCSX81j/images.png"
-      alt="Predictor Pro"
-    >
-
-    <div class="login-title">
-      PREDICTOR PRO
-    </div>
-
-    <div class="login-subtitle">
-      Secure access
-    </div>
-
-    <form
-      class="login-form"
-      id="loginForm"
-    >
-
-      <label
-        class="login-label"
-        for="appId"
-      >
-        APPLICATION ID
-      </label>
-
-      <input
-        id="appId"
-        class="app-id-input"
-        type="password"
-        inputmode="text"
-        autocomplete="off"
-        autocapitalize="none"
-        spellcheck="false"
-        placeholder="ENTER APP ID"
-        required
-      >
-
-      <button
-        type="submit"
-        class="login-button"
-      >
-        LOGIN
-      </button>
-
+  <section class="login-card" id="loginScreen">
+    <img class="login-logo" src="https://i.ibb.co/8gCSX81j/images.png" alt="Shika Predictor">
+    <div class="login-title">SHIKA PREDICTOR</div>
+    <div class="login-subtitle">Secure access · clock-synced</div>
+    <form class="login-form" id="loginForm">
+      <label class="login-label" for="appId">APPLICATION ID</label>
+      <input id="appId" class="app-id-input" type="password" inputmode="text"
+        autocomplete="off" autocapitalize="none" spellcheck="false"
+        placeholder="ENTER APP ID" required>
+      <button type="submit" class="login-button">LOGIN</button>
     </form>
-
-    <div
-      class="login-message"
-      id="loginMessage"
-    >
-      Enter your authorized application ID
-    </div>
-
+    <div class="login-message" id="loginMessage">Enter your authorized application ID</div>
   </section>
 
-
-  <!-- ================= PREDICTOR PRO ================= -->
-
-  <section
-    class="main-app hidden"
-    id="mainApp"
-  >
-
+  <section class="main-app hidden" id="mainApp">
     <div class="header">
-
       <div class="brand">
-
-        <img
-          class="brand-logo"
-          src="https://i.ibb.co/8gCSX81j/images.png"
-          alt="Predictor Pro"
-        >
-
-        <div class="logo">
-          PREDICTOR
-          <small>PRO</small>
-        </div>
-
+        <img class="brand-logo" src="https://i.ibb.co/8gCSX81j/images.png" alt="Shika Predictor">
+        <div class="logo">SHIKA<small>PREDICTOR</small></div>
       </div>
-
       <div class="status">
-
-        <span
-          class="dot"
-          id="dot"
-        ></span>
-
-        <span id="statusText">
-          Connecting...
-        </span>
-
+        <span class="dot on" id="dot"></span>
+        <span id="statusText">Local · clock-synced</span>
       </div>
-
     </div>
-
-
-    <!-- SIGNAL -->
 
     <div class="signal-box">
-
-      <div class="signal-label">
-        YOUR SIGNAL
-      </div>
-
-      <div
-        class="signal-value"
-        id="signal"
-      >
-        —
-      </div>
-
+      <div class="signal-label">YOUR SIGNAL</div>
+      <div class="signal-value" id="signal">—</div>
     </div>
 
-
-    <!-- DISPLAY -->
-
-    <div
-      class="display"
-      id="display"
-    >
-
-      <div
-        class="guide"
-        id="guide"
-      >
-        Rounds run automatically
-      </div>
-
-
-      <!-- CONTINUOUS SPINNERS -->
-
-      <div
-        class="spinner"
-        id="spinner"
-      >
-
+    <div class="display" id="display">
+      <div class="guide" id="guide">Rounds run automatically</div>
+      <div class="spinner" id="spinner">
         <div class="outer-ring"></div>
-
         <div class="inner-ring"></div>
-
         <div class="light-point"></div>
-
         <div class="inner-point"></div>
-
-
         <div class="core">
-
-          <div
-            class="phase"
-            id="phase"
-          >
-            WAITING
-          </div>
-
-          <div
-            class="multiplier"
-            id="multiplier"
-          >
-            1.00x
-          </div>
-
-          <div
-            class="timer"
-            id="timer"
-          ></div>
-
+          <div class="phase" id="phase">WAITING</div>
+          <div class="multiplier" id="multiplier">1.00x</div>
+          <div class="timer" id="timer"></div>
         </div>
-
       </div>
-
-
-      <div
-        class="ring-label"
-        id="ringLabel"
-      >
-        READY
-      </div>
-
+      <div class="ring-label" id="ringLabel">READY</div>
     </div>
 
-
-    <!-- PREDICTION BUTTON -->
-
-    <button
-      class="predict-button"
-      id="btn"
-    >
-      GET PREDICTION
-    </button>
-
-
-    <div
-      class="message"
-      id="msg"
-    >
-      Waiting for server...
-    </div>
-
-
-    <div
-      class="round-id"
-      id="roundId"
-    >
-      NO ACTIVE ROUND
-    </div>
-
+    <button class="predict-button" id="btn">GET PREDICTION</button>
+    <div class="message" id="msg">Clock-synced with Shika Chapaa</div>
+    <div class="round-id" id="roundId">NO ACTIVE ROUND</div>
   </section>
-
 </div>
-
-
 
 <script>
 /* =========================================================
-   PREDICTOR PRO — online (no-gen.bonto.run) + offline local
-   Crash formula (both modes): max(1, floor((0.97/(1-r))*100)/100)
+   SHIKA PREDICTOR — same Engine as shika-chapaa / signals
+   Deterministic, clock-driven. Same rounds on every device.
    ========================================================= */
 
 const VALID_APP_ID = "#911uidh8dhv24#";
-const SESSION_KEY = "predictor_pro_authenticated";
-const BACKEND = "https://no-gen.bonto.run";
+const SESSION_KEY = "shika_predictor_authenticated";
 
 const loginScreen = document.getElementById("loginScreen");
 const mainApp = document.getElementById("mainApp");
@@ -897,39 +267,83 @@ const btn = document.getElementById("btn");
 const display = document.getElementById("display");
 const ringLabel = document.getElementById("ringLabel");
 
-let socket = null;
-let mode = "offline"; // "online" | "offline"
-let offlineTimer = null;
-let offlineLive = null;
-let offlineState = {
-  phase: "waiting",
-  prediction: null,
-  multiplier: 1,
-  countdown: 0,
-  roundId: null,
-  startedAt: null
-};
+// ---- Shared Engine (identical to shika-chapaa.html / signals-3.html)
+const Engine = (function(){
+  const EPOCH = 1793022676743, GROWTH = 0.00006, CD = 5000, POST = 4000, MAXM = 1000;
+  const seedOf = r => {
+    let h = 2166136261 >>> 0, s = EPOCH + ':' + r;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  };
+  const rnd = a => () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+  const ANCH = [[1,0.97],[1.1,0.88],[1.2,0.77],[1.5,0.5],[2,0.35],[3,0.22],[5,0.115],[10,0.04],[50,0.008],[100,0.004],[1000,0.0003]];
+  const crashOf = r => {
+    const R = rnd(seedOf(r)); R();
+    const s = 1 - R();
+    if (s >= ANCH[0][1]) return 1;
+    for (let i = 1; i < ANCH.length; i++) {
+      const a = ANCH[i - 1], b = ANCH[i];
+      if (s >= b[1]) {
+        const t = (Math.log(a[1]) - Math.log(s)) / (Math.log(a[1]) - Math.log(b[1]));
+        return Math.min(MAXM, Math.floor(Math.exp(Math.log(a[0]) + t * (Math.log(b[0]) - Math.log(a[0]))) * 100) / 100);
+      }
+    }
+    return MAXM;
+  };
+  const runMs = c => c <= 1 ? 0 : Math.ceil(Math.log(c) / GROWTH / 50) * 50;
+  let r = 1, start = EPOCH;
+  const dur = c => CD + runMs(c) + POST;
+  function seek(now) {
+    if (now < start) { r = 1; start = EPOCH; }
+    while (now >= start + dur(crashOf(r))) { start += dur(crashOf(r)); r++; }
+  }
+  function info(n, s) {
+    const c = crashOf(n);
+    return { round: n, crash: c, start: s, countdownEnd: s + CD, runEnd: s + CD + runMs(c), end: s + dur(c) };
+  }
+  return {
+    EPOCH, CD, POST, GROWTH,
+    at(now) {
+      seek(now);
+      const i = info(r, start), el = now - i.countdownEnd;
+      const phase = now < i.countdownEnd ? 'countdown' : now < i.runEnd ? 'running' : 'crashed';
+      const mult = phase === 'running'
+        ? Math.min(i.crash, Math.floor(Math.exp(GROWTH * el) * 100) / 100)
+        : phase === 'crashed' ? i.crash : 1;
+      return { ...i, phase, mult, elapsed: Math.max(0, el) };
+    },
+    upcoming(now, n) {
+      seek(now);
+      const out = [];
+      let n0 = r, s = start;
+      for (let k = 0; k < n; k++) { const i = info(n0, s); out.push(i); s = i.end; n0++; }
+      return out;
+    },
+    past(now, n) {
+      seek(now);
+      const out = [];
+      for (let k = r - 1; k >= 1 && out.length < n; k--) out.push({ round: k, crash: crashOf(k) });
+      return out;
+    }
+  };
+})();
 
-function localCrash(){
-  const r = Math.random();
-  return Math.max(1, Math.floor((0.97 / Math.max(1e-12, 1 - r)) * 100) / 100);
-}
-
-function rndId(){
-  return Math.random().toString(36).slice(2, 10).toUpperCase();
-}
-
-function openPredictor(){
+function openPredictor() {
   loginScreen.classList.add("hidden");
   mainApp.classList.remove("hidden");
-  connectSocket();
-  // offline loop always available as fallback
-  startOfflineLoop();
+  tick();
+  setInterval(tick, 100);
 }
 
-loginForm.addEventListener("submit", function(event){
+loginForm.addEventListener("submit", function (event) {
   event.preventDefault();
-  if(appIdInput.value !== VALID_APP_ID){
+  if (appIdInput.value !== VALID_APP_ID) {
     loginMessage.textContent = "Invalid application ID.";
     loginMessage.className = "login-message error";
     appIdInput.value = "";
@@ -943,35 +357,24 @@ loginForm.addEventListener("submit", function(event){
   setTimeout(openPredictor, 200);
 });
 
-if(sessionStorage.getItem(SESSION_KEY) === "true"){
+if (sessionStorage.getItem(SESSION_KEY) === "true") {
   openPredictor();
 }
 
-function setOnlineUI(on){
-  mode = on ? "online" : "offline";
-  if(on){
-    dot.classList.add("on");
-    statusText.textContent = "Online · no-gen";
-  }else{
-    dot.classList.remove("on");
-    statusText.textContent = "Offline · local";
-  }
-}
-
 /* ---------- UI helpers ---------- */
-function flashDisplay(){
+function flashDisplay() {
   display.classList.add("flash");
-  setTimeout(()=>display.classList.remove("flash"), 350);
+  setTimeout(() => display.classList.remove("flash"), 350);
 }
 
-function showSignal(v, rid){
+function showSignal(v, rid) {
   const x = Number(v).toFixed(2);
   signalEl.textContent = x + "x";
   signalEl.classList.remove("reveal");
   void signalEl.offsetWidth;
   signalEl.classList.add("reveal");
-  if(rid) roundEl.textContent = "ROUND " + rid;
-  msgEl.textContent = mode === "online" ? "Signal received (server)" : "Signal received (offline)";
+  if (rid) roundEl.textContent = "ROUND #" + rid;
+  msgEl.textContent = "Signal locked for this round (clock-synced)";
   guideEl.textContent = "Prediction locked for this round";
   ringLabel.textContent = "SIGNAL READY";
   btn.textContent = "GET PREDICTION";
@@ -979,17 +382,17 @@ function showSignal(v, rid){
   flashDisplay();
 }
 
-function applyCountdown(seconds, rid){
+function applyCountdown(seconds, rid) {
   phaseEl.textContent = "COUNTDOWN";
   multiEl.textContent = "1.00x";
   multiEl.className = "multiplier";
-  timerEl.textContent = seconds;
-  guideEl.textContent = "Round starts in " + seconds + "s";
-  if(rid) roundEl.textContent = "ROUND " + rid;
+  timerEl.textContent = seconds.toFixed(1);
+  guideEl.textContent = "Round starts in " + seconds.toFixed(1) + "s";
+  if (rid) roundEl.textContent = "ROUND #" + rid;
   ringLabel.textContent = "COUNTDOWN";
 }
 
-function applyLive(m){
+function applyLive(m) {
   phaseEl.textContent = "LIVE";
   timerEl.textContent = "";
   multiEl.textContent = Number(m).toFixed(2) + "x";
@@ -998,274 +401,92 @@ function applyLive(m){
   ringLabel.textContent = "LIVE";
 }
 
-function applyCrash(pred, rid){
+function applyCrash(pred, rid) {
   phaseEl.textContent = "CRASHED";
   multiEl.textContent = Number(pred).toFixed(2) + "x";
   multiEl.className = "multiplier crash";
   timerEl.textContent = "";
   guideEl.textContent = "Crashed at " + Number(pred).toFixed(2) + "x";
-  msgEl.textContent = "Round finished – next round coming";
-  if(rid) roundEl.textContent = "ROUND " + rid;
+  msgEl.textContent = "Round finished – next signal coming";
+  if (rid) roundEl.textContent = "ROUND #" + rid;
   ringLabel.textContent = "CRASHED";
   btn.textContent = "GET PREDICTION";
   btn.classList.remove("loading");
 }
 
-function applyWaiting(){
+function applyWaiting() {
   phaseEl.textContent = "WAITING";
   multiEl.textContent = "1.00x";
   multiEl.className = "multiplier";
-  signalEl.textContent = "—";
-  signalEl.classList.remove("reveal");
   timerEl.textContent = "";
   guideEl.textContent = "Next round starting soon";
-  msgEl.textContent = mode === "online" ? "Connected" : "Offline mode active";
+  msgEl.textContent = "Clock-synced with Shika Chapaa";
   roundEl.textContent = "NO ACTIVE ROUND";
   ringLabel.textContent = "READY";
   btn.textContent = "GET PREDICTION";
   btn.classList.remove("loading");
 }
 
-/* =========================================================
-   OFFLINE ROUND ENGINE (same 0.97 formula as game + server)
-   ========================================================= */
-const OFF_COUNTDOWN = 5;
-const OFF_PAUSE = 3500;
-const OFF_GAP = 1500;
-const K = 0.00009; // matches aviator client: m = exp(0.00009 * ms)
+let lastPhase = null;
+let lockedRound = null;
+let lockedCrash = null;
 
-function clearOfflineTimers(){
-  if(offlineTimer){ clearInterval(offlineTimer); offlineTimer = null; }
-  if(offlineLive){ clearInterval(offlineLive); offlineLive = null; }
-}
+function tick() {
+  const s = Engine.at(Date.now());
+  const rid = s.round;
 
-function offlineStartRound(){
-  if(mode === "online") return; // server drives UI
-  clearOfflineTimers();
-  const prediction = localCrash();
-  const roundId = rndId();
-  offlineState = {
-    phase: "countdown",
-    prediction,
-    multiplier: 1,
-    countdown: OFF_COUNTDOWN,
-    roundId,
-    startedAt: null
-  };
-  applyCountdown(OFF_COUNTDOWN, roundId);
-  msgEl.textContent = "Offline · get ready";
-
-  let sec = OFF_COUNTDOWN;
-  offlineTimer = setInterval(function(){
-    if(mode === "online"){ clearOfflineTimers(); return; }
-    sec--;
-    if(sec > 0){
-      offlineState.countdown = sec;
-      applyCountdown(sec, roundId);
-    }else{
-      clearInterval(offlineTimer);
-      offlineTimer = null;
-      offlineBeginLive();
+  if (s.phase === "countdown") {
+    const sec = Math.max(0, (s.countdownEnd - Date.now()) / 1000);
+    applyCountdown(sec, rid);
+    if (lastPhase !== "countdown") {
+      msgEl.textContent = "Get ready – signal available";
     }
-  }, 1000);
-}
-
-function offlineBeginLive(){
-  if(mode === "online") return;
-  offlineState.phase = "running";
-  offlineState.startedAt = Date.now();
-  offlineState.multiplier = 1;
-  applyLive(1);
-  msgEl.textContent = "Offline · round is live";
-
-  const target = offlineState.prediction;
-  const durationMs = Math.log(Math.max(1.01, target)) / K;
-
-  offlineLive = setInterval(function(){
-    if(mode === "online"){ clearOfflineTimers(); return; }
-    const elapsed = Date.now() - offlineState.startedAt;
-    if(elapsed >= durationMs){
-      offlineState.multiplier = target;
-      clearInterval(offlineLive);
-      offlineLive = null;
-      offlineEndRound();
-      return;
+  } else if (s.phase === "running") {
+    applyLive(s.mult);
+    if (lastPhase !== "running") {
+      msgEl.textContent = "Round is live – signal still available";
     }
-    const m = Math.min(target, Math.exp(K * elapsed));
-    offlineState.multiplier = Math.round(m * 100) / 100;
-    applyLive(offlineState.multiplier);
-  }, 40);
-}
-
-function offlineEndRound(){
-  if(mode === "online") return;
-  offlineState.phase = "ended";
-  applyCrash(offlineState.prediction, offlineState.roundId);
-  // reveal signal at end if user never requested
-  signalEl.textContent = Number(offlineState.prediction).toFixed(2) + "x";
-
-  setTimeout(function(){
-    if(mode === "online") return;
-    offlineState.phase = "waiting";
-    applyWaiting();
-    setTimeout(function(){
-      if(mode === "online") return;
-      offlineStartRound();
-    }, OFF_GAP);
-  }, OFF_PAUSE);
-}
-
-function startOfflineLoop(){
-  // only auto-run offline rounds when not online
-  if(mode === "online") return;
-  if(offlineState.phase === "waiting" || offlineState.phase === "ended"){
-    setTimeout(function(){
-      if(mode !== "online") offlineStartRound();
-    }, 800);
+  } else {
+    // crashed / post
+    applyCrash(s.crash, rid);
+    // auto-reveal signal at crash if user never requested
+    if (lockedRound !== rid) {
+      signalEl.textContent = Number(s.crash).toFixed(2) + "x";
+      signalEl.classList.add("reveal");
+    }
   }
+
+  // keep locked signal for the current round
+  if (lockedRound === rid && lockedCrash != null) {
+    signalEl.textContent = Number(lockedCrash).toFixed(2) + "x";
+    signalEl.classList.add("reveal");
+  } else if (lockedRound !== rid && s.phase === "countdown") {
+    // new round – clear previous lock display only if not yet requested
+    if (lockedRound != null) {
+      signalEl.textContent = "—";
+      signalEl.classList.remove("reveal");
+      lockedRound = null;
+      lockedCrash = null;
+    }
+  }
+
+  lastPhase = s.phase;
 }
 
-function offlineRequestPrediction(){
+btn.onclick = function () {
   btn.textContent = "CALCULATING...";
   btn.classList.add("loading");
   ringLabel.textContent = "CALCULATING";
-  msgEl.textContent = "Generating offline signal...";
+  msgEl.textContent = "Generating clock-synced signal...";
 
-  setTimeout(function(){
-    let pred = offlineState.prediction;
-    if(offlineState.phase === "countdown" || offlineState.phase === "running"){
-      // use current round crash
-      pred = offlineState.prediction;
-    }else{
-      // no active round — generate a fresh offline signal
-      pred = localCrash();
-      offlineState.prediction = pred;
-      offlineState.roundId = offlineState.roundId || rndId();
-    }
-    showSignal(pred, offlineState.roundId);
-  }, 450 + Math.random() * 350);
-}
-
-/* =========================================================
-   ONLINE SOCKET
-   ========================================================= */
-function connectSocket(){
-  if(socket) return;
-  if(typeof io === "undefined"){
-    setOnlineUI(false);
-    msgEl.textContent = "Socket.IO unavailable — offline mode";
-    return;
-  }
-
-  socket = io(BACKEND, {
-    transports: ["websocket", "polling"],
-    reconnection: true,
-    reconnectionAttempts: Infinity,
-    timeout: 8000
-  });
-
-  setupSocketEvents();
-}
-
-function setupSocketEvents(){
-  socket.on("connect", function(){
-    setOnlineUI(true);
-    clearOfflineTimers();
-    msgEl.textContent = "Connected to no-gen";
-    socket.emit("get_round_state");
-  });
-
-  socket.on("disconnect", function(){
-    setOnlineUI(false);
-    msgEl.textContent = "Offline — using local signals";
-    startOfflineLoop();
-  });
-
-  socket.on("connect_error", function(){
-    setOnlineUI(false);
-    msgEl.textContent = "Cannot reach no-gen — offline mode";
-    startOfflineLoop();
-  });
-
-  btn.onclick = function(){
-    btn.textContent = "CALCULATING...";
-    btn.classList.add("loading");
-    ringLabel.textContent = "CALCULATING";
-
-    if(mode === "online" && socket && socket.connected){
-      msgEl.textContent = "Requesting prediction from server...";
-      socket.emit("request_prediction");
-      // safety timeout → offline fallback
-      setTimeout(function(){
-        if(btn.classList.contains("loading") && mode !== "online"){
-          offlineRequestPrediction();
-        }else if(btn.classList.contains("loading") && mode === "online"){
-          // server slow — still try offline snapshot if no reply
-        }
-      }, 4000);
-    }else{
-      offlineRequestPrediction();
-    }
-  };
-
-  socket.on("prediction_ready", function(data){
-    showSignal(data.prediction, data.roundId);
-  });
-
-  socket.on("prediction_error", function(data){
-    msgEl.textContent = (data && data.message) || "No signal right now";
-    guideEl.textContent = "Wait for the next countdown";
-    ringLabel.textContent = "WAITING";
-    btn.textContent = "GET PREDICTION";
-    btn.classList.remove("loading");
-  });
-
-  socket.on("round_countdown", function(data){
-    if(mode !== "online") return;
-    applyCountdown(data.seconds, data.roundId);
-    msgEl.textContent = "Get ready";
-  });
-
-  socket.on("round_started", function(data){
-    if(mode !== "online") return;
-    applyLive(data && data.multiplier != null ? data.multiplier : 1);
-    msgEl.textContent = "Round is live – you can still request signal";
-  });
-
-  socket.on("round_update", function(data){
-    if(mode !== "online") return;
-    applyLive(data.multiplier);
-  });
-
-  socket.on("round_ended", function(data){
-    if(mode !== "online") return;
-    applyCrash(data.prediction != null ? data.prediction : data.multiplier, data.roundId);
-    signalEl.textContent = Number(data.prediction != null ? data.prediction : data.multiplier).toFixed(2) + "x";
-  });
-
-  socket.on("round_reset", function(){
-    if(mode !== "online") return;
-    applyWaiting();
-  });
-
-  socket.on("round_state", function(data){
-    if(!data || mode !== "online") return;
-    if(data.roundId) roundEl.textContent = "ROUND " + data.roundId;
-    if(data.phase === "countdown" && data.countdown != null){
-      applyCountdown(data.countdown, data.roundId);
-    }else if(data.phase === "running"){
-      applyLive(data.multiplier || 1);
-    }else if(data.phase === "ended"){
-      applyCrash(data.prediction || data.multiplier, data.roundId);
-    }else if(data.phase === "waiting"){
-      applyWaiting();
-    }
-  });
-}
-
-// If user already has session, openPredictor runs; otherwise wait for login
+  setTimeout(function () {
+    const s = Engine.at(Date.now());
+    // Always return the crash of the current (or next active) round
+    lockedRound = s.round;
+    lockedCrash = s.crash;
+    showSignal(s.crash, s.round);
+  }, 420 + Math.random() * 280);
+};
 </script>
-
-
 </body>
 </html>
