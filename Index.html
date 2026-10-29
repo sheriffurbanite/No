@@ -568,15 +568,26 @@ h3{color:#0b6b47}
   /* ---- Shared Engine: identical to the game's, so rounds and crash points match ---- */
   var CLK=0;
   function now(){return Date.now()+CLK}
+  // Public UTC + RTT-corrected offset (same source + algorithm as game app)
   function syncClock(){
-    if(!window.fetch||!/^https?:/.test(location.protocol))return;
-    var t0=Date.now();
-    fetch(location.href.split('#')[0].split('?')[0]+'?_t='+t0,{method:'HEAD',cache:'no-store'}).then(function(r){
-      var t1=Date.now(),h=r.headers.get('Date');if(!h)return;
-      var sv=Date.parse(h);if(isNaN(sv))return;
-      sv+=1000*(parseInt(r.headers.get('Age'),10)||0)+500;
-      var off=sv-(t0+t1)/2;if(Math.abs(off-CLK)>1500||!CLK)CLK=off;
-    }).catch(function(){});
+    if(!window.fetch)return;
+    var best=null,done=0;
+    function sample(){
+      var t0=Date.now();
+      fetch('https://worldtimeapi.org/api/timezone/Etc/UTC',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+        var t1=Date.now(),rtt=t1-t0;
+        var server=Date.parse(j.utc_datetime)+rtt/2;
+        var off=server-t1;
+        if(!best||rtt<best.rtt)best={rtt:rtt,off:off};
+      }).catch(function(){}).then(function(){
+        done++;
+        if(done<4){sample();return}
+        if(best){
+          if(Math.abs(best.off-CLK)>400||!CLK)CLK=best.off;
+        }
+      });
+    }
+    sample();
   }
   var Engine=(function(){
     var EPOCH=1793022676743, GROWTH=0.00006, CD=5000, POST=4000, MAXM=1000;
