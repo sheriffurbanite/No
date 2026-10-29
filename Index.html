@@ -245,6 +245,26 @@ body{
    Deterministic, clock-driven. Same rounds on every device.
    ========================================================= */
 
+// ---- Shared true-time clock (same as the game): every device follows the host server's UTC time, not its own phone clock
+let CLK = 0, _cs = false;
+const _dn = Date.now;
+Date.now = function () { return _dn.call(Date) + CLK; };
+function syncClock() {
+  if (!window.fetch || !/^https?:/.test(location.protocol)) return;
+  const t0 = _dn.call(Date);
+  fetch(location.href.split('#')[0].split('?')[0] + '?_t=' + t0, { method: 'HEAD', cache: 'no-store' }).then(function (r) {
+    const t1 = _dn.call(Date), h = r.headers.get('Date');
+    if (!h) return;
+    let sv = Date.parse(h);
+    if (isNaN(sv)) return;
+    sv += 1000 * (parseInt(r.headers.get('Age'), 10) || 0) + 500;
+    const off = sv - (t0 + t1) / 2;
+    if (!_cs || Math.abs(off - CLK) > 1500) { CLK = off; _cs = true; }
+  }).catch(function () {});
+}
+syncClock();
+setInterval(syncClock, 300000);
+
 const VALID_APP_ID = "#911uidh8dhv24#";
 const SESSION_KEY = "shika_predictor_authenticated";
 
